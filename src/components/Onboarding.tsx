@@ -403,8 +403,28 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
             setHasMoreHistory(data.has_more ?? (apiMessages.length === 20));
             console.log(`[BOOT] Loaded ${apiMessages.length} messages. Set local chat buffer to most recent ${recent8.length}`);
           } else {
-             // Fallback to initial question if no messages returned
-             triggerDefaultWelcome();
+            const historyKey = `heist_chat_history_${userId}`;
+            const cachedHistoryRaw = localStorage.getItem(historyKey);
+            if (cachedHistoryRaw) {
+              try {
+                const cachedHistory = JSON.parse(cachedHistoryRaw) as ChatMessage[];
+                if (Array.isArray(cachedHistory) && cachedHistory.length > 0) {
+                  const restoredMessages = cachedHistory.map((msg: any) => ({
+                    ...msg,
+                    timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
+                  }));
+                  setUiDisplayMessages(restoredMessages);
+                  setLocalChatBuffer(restoredMessages.slice(-8));
+                  setHasMoreHistory(false);
+                  console.log(`[BOOT] Restored ${restoredMessages.length} cached messages from local storage.`);
+                  return;
+                }
+              } catch (cacheErr) {
+                console.warn("[BOOT] Failed to restore cached chat history:", cacheErr);
+              }
+            }
+            // Fallback to initial question if no messages returned
+            triggerDefaultWelcome();
           }
         } else {
           console.warn("[BOOT] Failed to fetch chat history, backend returned:", response.status);

@@ -1,7 +1,10 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-let supabaseUrl = "";
-let supabaseAnonKey = "";
+const HARDCODED_SUPABASE_URL = "https://xhsxktsnmrrsxcmouqki.supabase.co";
+const HARDCODED_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhoc3hrdHNubXJyc3hjbW91cWtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NDUwNzcsImV4cCI6MjA5MzMyMTA3N30.A-ja-yPnlFT3zMP5ew7HSYETN4-5aiClLyW1YXYWDfA";
+
+let supabaseUrl = HARDCODED_SUPABASE_URL;
+let supabaseAnonKey = HARDCODED_SUPABASE_ANON_KEY;
 
 export function initSupabaseKeys(url: string, key: string) {
   if (url && key) {
@@ -16,8 +19,8 @@ export function initSupabaseKeys(url: string, key: string) {
 // Helper to check if Supabase is configured
 export function getSupabaseKeys() {
   const meta = import.meta as any;
-  const url = supabaseUrl || meta.env?.VITE_SUPABASE_URL || "";
-  const key = supabaseAnonKey || meta.env?.VITE_SUPABASE_ANON_KEY || "";
+  const url = supabaseUrl || HARDCODED_SUPABASE_URL || meta.env?.VITE_SUPABASE_URL || "";
+  const key = supabaseAnonKey || HARDCODED_SUPABASE_ANON_KEY || meta.env?.VITE_SUPABASE_ANON_KEY || "";
   return { url, key, isConfigured: !!(url && key) };
 }
 

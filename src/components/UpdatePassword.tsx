@@ -44,7 +44,7 @@ export default function UpdatePassword() {
 
     const supabase = getSupabase();
     if (!supabase) {
-      setError("Supabase connection is not configured or offline. Please declare VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY first.");
+      setError("Supabase connection is not configured or offline.");
       setLoading(false);
       return;
     }

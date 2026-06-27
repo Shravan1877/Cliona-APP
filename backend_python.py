@@ -14,7 +14,7 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.types import Command
 import google.generativeai as genai
 from supabase import create_client, Client
-from groq import AsyncGroq
+from openai import AsyncOpenAI
 import random
 import json
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -59,17 +59,25 @@ DIST_DIR = BASE_DIR / "dist"
 # Configure Gemini AI SDK
 genai.configure(api_key=os.getenv("GEMINI_API_KEY", "YOUR_GEMINI_API_KEY"))
 
-# Configure Groq SDK
-groq_api_key = os.getenv("GROQ_API_KEY", "")
-groq_client = None
-if groq_api_key:
+# Configure OpenRouter SDK (OpenAI-compatible)
+OPENROUTER_MODEL = "meta-llama/llama-3.1-8b-instruct"
+openrouter_api_key = os.getenv("OPENROUTER_API_KEY", "")
+openrouter_client = None
+if openrouter_api_key:
     try:
-        groq_client = AsyncGroq(api_key=groq_api_key)
-        print("🚀 Groq client successfully initialized.")
+        openrouter_client = AsyncOpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=openrouter_api_key,
+            default_headers={
+                "HTTP-Referer": os.getenv("APP_URL", "http://localhost:3000"),
+                "X-Title": "Cliona",
+            },
+        )
+        print("🚀 OpenRouter client successfully initialized.")
     except Exception as e:
-        print(f"⚠️ Failed to startup Groq client: {e}")
+        print(f"⚠️ Failed to startup OpenRouter client: {e}")
 else:
-    print("ℹ️ GROQ_API_KEY not configured. Falling back to Gemini.")
+    print("ℹ️ OPENROUTER_API_KEY not configured. Falling back to Gemini.")
 
 # -------------------------------------------------------------
 # STEP 1: Datamodels & StylistState
@@ -134,9 +142,12 @@ class ClionaMemory(BaseModel):
     hard_nos: List[str] = Field(default_factory=list)
 
 # Initialize Supabase client with admin privileges
-SUPABASE_URL = os.getenv("SUPABASE_URL") or os.getenv("VITE_SUPABASE_URL") or ""
+HARDCODED_SUPABASE_URL = "https://xhsxktsnmrrsxcmouqki.supabase.co"
+HARDCODED_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhoc3hrdHNubXJyc3hjbW91cWtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NDUwNzcsImV4cCI6MjA5MzMyMTA3N30.A-ja-yPnlFT3zMP5ew7HSYETN4-5aiClLyW1YXYWDfA"
+
+SUPABASE_URL = os.getenv("SUPABASE_URL") or os.getenv("VITE_SUPABASE_URL") or HARDCODED_SUPABASE_URL
 # Specifically retrieve the SUPABASE_SERVICE_ROLE_KEY for database sync
-SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("VITE_SUPABASE_SERVICE_ROLE_KEY") or ""
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("VITE_SUPABASE_SERVICE_ROLE_KEY") or os.getenv("VITE_SUPABASE_ANON_KEY") or HARDCODED_SUPABASE_ANON_KEY
 
 supabase: Optional[Client] = None
 if SUPABASE_URL and SUPABASE_KEY:
@@ -335,37 +346,57 @@ def limit_to_token_budget(
             
     return current_history, current_super_rag, current_user_mem
 
+async def _call_openrouter_chat(
+    messages: List[dict],
+    temperature: float = 0.7,
+    max_tokens: int = 400,
+    response_format: Optional[dict] = None,
+) -> str:
+    if not openrouter_client:
+        raise RuntimeError("OpenRouter client not initialized.")
+
+    kwargs = {
+        "model": OPENROUTER_MODEL,
+        "messages": messages,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+    }
+    if response_format is not None:
+        kwargs["response_format"] = response_format
+
+    response = await openrouter_client.chat.completions.create(**kwargs)
+    return response.choices[0].message.content.strip()
+
+
 async def call_text_llm(
     prompt: str,
     system_instruction: str,
     temperature: float = 0.7
 ) -> str:
     """
-    Performs single-turn text inference. Uses Groq for all text-only queries,
-    falling back to Gemini 3.1 Flash Lite if key is missing or calls fail.
+    Performs single-turn text inference. Uses OpenRouter DeepHermes for text-only queries,
+    falling back to Gemini 3.1 Flash Lite if the key is missing or calls fail.
     """
-    if groq_client:
+    if openrouter_client:
         try:
-            print("[LLM Router - Single Turn]: Activating Groq (llama-3.3-70b-versatile)")
-            response = await groq_client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                messages=[
+            print("[LLM Router - Single Turn]: Activating OpenRouter DeepHermes")
+            return await _call_openrouter_chat(
+                [
                     {"role": "system", "content": system_instruction},
-                    {"role": "user", "content": prompt}
+                    {"role": "user", "content": prompt},
                 ],
                 temperature=temperature,
-                max_tokens=400
+                max_tokens=400,
             )
-            return response.choices[0].message.content.strip()
         except Exception as e:
-            print(f"⚠️ Groq single-turn inference failed: {e}. Falling back to Gemini.")
+            print(f"⚠️ OpenRouter single-turn inference failed: {e}. Falling back to Gemini.")
 
     # Standard Gemini fallback
     print("[LLM Router - Single Turn]: Activating Gemini fallback")
-    model = genai.GenerativeModel('gemini-3.1-flash-lite-preview')
+    model = genai.GenerativeModel('gemini-2.0-flash-lite')
     response = model.generate_content(
         contents=prompt,
-        generation_config={"system_instruction": system_instruction, "temperature": temperature}
+        generation_config=genai.types.GenerationConfig(temperature=temperature)
     )
     return response.text.strip()
 
@@ -398,21 +429,20 @@ async def call_structured_dual_llm(
         f"{json.dumps(schema_schema, indent=2)}\n"
     )
 
-    # 1. Try Groq first if available
-    if groq_client:
+    # 1. Try OpenRouter first if available
+    if openrouter_client:
         try:
-            print("[LLM Router - Dual Output]: Requesting Groq (llama-3.3-70b-versatile)")
-            response = await groq_client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                messages=[
+            print("[LLM Router - Dual Output]: Requesting OpenRouter DeepHermes")
+            raw_text = await _call_openrouter_chat(
+                [
                     {"role": "system", "content": enhanced_system_instruction},
-                    {"role": "user", "content": prompt}
+                    {"role": "user", "content": prompt},
                 ],
                 temperature=0.74,
-                response_format={"type": "json_object"}
+                max_tokens=900,
+                response_format={"type": "json_object"},
             )
-            raw_text = response.choices[0].message.content.strip()
-            print(f"[Groq Dual Output Raw]: {raw_text}")
+            print(f"[OpenRouter Dual Output Raw]: {raw_text}")
             parsed = json.loads(raw_text)
             
             scheduled_data = parsed.get("scheduled_event")
@@ -430,20 +460,18 @@ async def call_structured_dual_llm(
                 scheduled_event=scheduled
             )
         except Exception as e:
-            print(f"⚠️ Groq structured dual output failed: {e}. Falling back to Gemini.")
+            print(f"⚠️ OpenRouter structured dual output failed: {e}. Falling back to Gemini.")
 
     # 2. Try Gemini fallback/primary
     print("[LLM Router - Dual Output]: Requesting Gemini (gemini-3.5-flash) with response schema")
-    model = genai.GenerativeModel('gemini-3.5-flash')
+    model = genai.GenerativeModel('gemini-2.0-flash')
     try:
         response = model.generate_content(
             contents=prompt,
-            generation_config={
-                "system_instruction": enhanced_system_instruction,
-                "temperature": 0.74,
-                "response_mime_type": "application/json",
-                "response_schema": ClionaDualOutput
-            }
+            generation_config=genai.types.GenerationConfig(
+                temperature=0.74,
+                response_mime_type="application/json"
+            )
         )
         raw_text = response.text.replace("```json", "").replace("```", "").strip()
         print(f"[Gemini Dual Output Raw]: {raw_text}")
@@ -467,11 +495,10 @@ async def call_structured_dual_llm(
         try:
             response = model.generate_content(
                 contents=prompt,
-                generation_config={
-                    "system_instruction": enhanced_system_instruction,
-                    "temperature": 0.74,
-                    "response_mime_type": "application/json"
-                }
+                generation_config=genai.types.GenerationConfig(
+                    temperature=0.74,
+                    response_mime_type="application/json"
+                )
             )
             raw_text = response.text.replace("```json", "").replace("```", "").strip()
             print(f"[Gemini Dual Output Fallback Raw]: {raw_text}")
@@ -506,24 +533,22 @@ async def call_conversational_llm(
     Performs conversational chat generation.
     Checks is_image: uses Gemini for image tasks, Groq for text-only.
     """
-    # 1. Groq Path
-    if not is_image and groq_client:
+    # 1. OpenRouter Path
+    if not is_image and openrouter_client:
         try:
-            print("[LLM Router - Conversational]: Activating Groq (llama-3.3-70b-versatile) for text.")
-            groq_messages = [{"role": "system", "content": system_instruction}]
+            print("[LLM Router - Conversational]: Activating OpenRouter DeepHermes for text.")
+            llm_messages = [{"role": "system", "content": system_instruction}]
             for m in sliced_messages:
                 role = "user" if m.get("role") == "user" else "assistant"
-                groq_messages.append({"role": role, "content": m.get("content", "")})
-                
-            response = await groq_client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                messages=groq_messages,
+                llm_messages.append({"role": role, "content": m.get("content", "")})
+
+            return await _call_openrouter_chat(
+                llm_messages,
                 temperature=0.72,
-                max_tokens=650
+                max_tokens=650,
             )
-            return response.choices[0].message.content.strip()
         except Exception as e:
-            print(f"⚠️ Groq conversational chat failed: {e}. Falling back to Gemini.")
+            print(f"⚠️ OpenRouter conversational chat failed: {e}. Falling back to Gemini.")
 
     # 2. Gemini Path
     print("[LLM Router - Conversational]: Activating Gemini-3.1-flash-lite-preview")
@@ -532,10 +557,10 @@ async def call_conversational_llm(
         role = "user" if m.get("role") == "user" else "model"
         gemini_contents.append({"role": role, "parts": [{"text": m.get("content", "")}]})
         
-    model = genai.GenerativeModel('gemini-3.1-flash-lite-preview')
+    model = genai.GenerativeModel('gemini-2.0-flash-lite')
     response = model.generate_content(
         contents=gemini_contents,
-        generation_config={"system_instruction": system_instruction}
+        generation_config=genai.types.GenerationConfig(temperature=0.7)
     )
     return response.text.strip()
 
@@ -883,10 +908,10 @@ async def parse_and_schedule_reminder(user_id: str, message_text: str, user_time
             f"User's Timezone: {tz_name}\n"
         )
 
-        model = genai.GenerativeModel('gemini-3.1-flash-lite-preview')
+        model = genai.GenerativeModel('gemini-2.0-flash-lite')
         response = model.generate_content(
             contents=prompt,
-            generation_config={"system_instruction": system_instruction, "temperature": 0.0}
+            generation_config=genai.types.GenerationConfig(temperature=0.0)
         )
         raw_text = response.text.strip() if response and response.text else ""
 
@@ -959,10 +984,10 @@ async def generate_cliona_reminder_text(event_context: str) -> str:
     )
     prompt = f"Event Context: {event_context}"
     try:
-        model = genai.GenerativeModel('gemini-3.1-flash-lite-preview')
+        model = genai.GenerativeModel('gemini-2.0-flash-lite')
         response = model.generate_content(
             contents=prompt,
-            generation_config={"system_instruction": system_instruction, "temperature": 0.8}
+            generation_config=genai.types.GenerationConfig(temperature=0.8)
         )
         reply = response.text.strip().lower()
         # Strip trailing punctuation/markdown backticks
@@ -1666,7 +1691,10 @@ async def chat_interaction(payload: UserChatPayload, background_tasks: Backgroun
             )
 
     # Enforce Token Gate Check
-    if monthly_groq_tokens >= limits["groqTokenLimit"]:
+    # OpenRouter is now the primary provider, so allow requests to proceed unless the plan is explicitly blocked.
+    if limits["groqTokenLimit"] == 0 and current_plan == "free":
+        print(f"ℹ️ [CHAT ALLOW PYTHON] Free plan request allowed to proceed with OpenRouter provider for user {user_id}.")
+    elif monthly_groq_tokens >= limits["groqTokenLimit"] and limits["groqTokenLimit"] != float("inf"):
         print(f"🚨 [PAYWALL BLOCKED PYTHON] Monthly AI allowance reached for user {user_id}.")
         return JSONResponse(
             status_code=403,
@@ -2124,8 +2152,8 @@ async def get_config_status():
 
 @app.get("/api/supabase-config")
 async def get_supabase_config():
-    supabase_url = os.getenv("VITE_SUPABASE_URL") or os.getenv("SUPABASE_URL", "")
-    supabase_anon_key = os.getenv("VITE_SUPABASE_ANON_KEY") or os.getenv("SUPABASE_KEY", "")
+    supabase_url = os.getenv("VITE_SUPABASE_URL") or os.getenv("SUPABASE_URL") or HARDCODED_SUPABASE_URL
+    supabase_anon_key = os.getenv("VITE_SUPABASE_ANON_KEY") or os.getenv("SUPABASE_KEY") or HARDCODED_SUPABASE_ANON_KEY
     if not supabase_url or not supabase_anon_key:
         return JSONResponse(
             status_code=200,

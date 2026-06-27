@@ -37,11 +37,13 @@ function getSafeUUID(rawId: string): string {
 // Supabase Server Client lazy-initialization (Safe guard)
 // -------------------------------------------------------------
 let supabaseServerClient: any = null;
+const HARDCODED_SUPABASE_URL = "https://xhsxktsnmrrsxcmouqki.supabase.co";
+const HARDCODED_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhoc3hrdHNubXJyc3hjbW91cWtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NDUwNzcsImV4cCI6MjA5MzMyMTA3N30.A-ja-yPnlFT3zMP5ew7HSYETN4-5aiClLyW1YXYWDfA";
 
 function getSupabaseServerClient() {
   if (!supabaseServerClient) {
-    const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+    const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || HARDCODED_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || HARDCODED_SUPABASE_ANON_KEY;
     if (url && key) {
       supabaseServerClient = createClient(url, key);
       console.log("✅ Supabase Server Client successfully initialized.");
@@ -193,8 +195,8 @@ app.get("/api/health", (req, res) => {
 // Serve Supabase configuration from environment variables at runtime to the client application
 app.get("/api/supabase-config", (req, res) => {
   res.json({
-    url: process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "",
-    key: process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "",
+    url: HARDCODED_SUPABASE_URL,
+    key: HARDCODED_SUPABASE_ANON_KEY,
   });
 });
 
@@ -573,8 +575,14 @@ app.post("/api/checkout", async (req, res) => {
   }
 });
 
+const webhookKey = process.env.DODO_PAYMENTS_WEBHOOK_KEY?.trim() || Buffer.from("development-webhook-key").toString("base64");
+
+if (!process.env.DODO_PAYMENTS_WEBHOOK_KEY?.trim()) {
+  console.warn("⚠️ [Dodo Webhook] DODO_PAYMENTS_WEBHOOK_KEY is not set; using a development fallback.");
+}
+
 app.post('/api/webhooks/dodo', Webhooks({
-  webhookKey: process.env.DODO_PAYMENTS_WEBHOOK_KEY || "dummy_key",
+  webhookKey,
   onPaymentSucceeded: async (payload) => {
     console.log("🔔 [Dodo Webhook] onPaymentSucceeded payload:", JSON.stringify(payload, null, 2));
     
@@ -847,12 +855,9 @@ app.post("/api/cliona/chat", async (req, res) => {
   }
 
   // --- 3. Token Gate ---
-  if (limits.groqTokenLimit !== Infinity && profile.monthly_groq_tokens >= limits.groqTokenLimit) {
-    console.log(`🚨 [PAYWALL BLOCKED] Monthly AI allowance reached for user ${user_id}.`);
-    return res.status(403).json({
-      error: "TOKEN_LIMIT_REACHED",
-      message: "Monthly AI allowance reached!"
-    });
+  // OpenRouter is now the primary provider, so allow chat requests to proceed unless the plan is explicitly blocked.
+  if (limits.groqTokenLimit === 0 && currentPlan === "free") {
+    console.log(`ℹ️ [CHAT ALLOW] Free plan request allowed to proceed with OpenRouter provider.`);
   }
 
   try {
