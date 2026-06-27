@@ -1,0 +1,159 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Cormorant Garamond", Georgia, serif;
+}
+
+:root {
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  
+  /* Default/Darkroom Mode variables */
+  --bg-base: #000000;
+  --bg-deep: #000000;
+  --surface-card: #0d0e0d;
+  --primary-accent: #2c6b64;
+  --muted-accent: #7ab5af;
+  --text-primary: #dcd9d1;
+  --text-secondary: #8c8985;
+  --border-rule: #1e1f1e;
+  --noise-opacity: 0.15;
+  --noise-blend: color-dodge;
+  --grain-opacity: 0.22;
+  --ambient-glow-opacity: 0.06;
+}
+
+/* Explicit class-based light mode override */
+:root.light {
+  /* Parchment style variables */
+  --bg-base: #f4f1ea;
+  --bg-deep: #ede9e0;
+  --surface-card: #faf8f5;
+  --primary-accent: #2c6b64;
+  --muted-accent: #7ab5af;
+  --text-primary: #1c1e1d;
+  --text-secondary: #5e5c58;
+  --border-rule: #dfdad1;
+  --noise-opacity: 0.10;
+  --noise-blend: color-burn;
+  --grain-opacity: 0.12;
+  --ambient-glow-opacity: 0.03;
+}
+
+/* Explicit class-based dark mode override to prevent default fallback */
+:root.dark {
+  --bg-base: #000000;
+  --bg-deep: #000000;
+  --surface-card: #0d0e0d;
+  --primary-accent: #2c6b64;
+  --muted-accent: #7ab5af;
+  --text-primary: #dcd9d1;
+  --text-secondary: #8c8985;
+  --border-rule: #1e1f1e;
+  --noise-opacity: 0.15;
+  --noise-blend: color-dodge;
+  --grain-opacity: 0.22;
+  --ambient-glow-opacity: 0.06;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not(.dark) {
+    /* Parchment style variables */
+    --bg-base: #f4f1ea;
+    --bg-deep: #ede9e0;
+    --surface-card: #faf8f5;
+    --primary-accent: #2c6b64;
+    --muted-accent: #7ab5af;
+    --text-primary: #1c1e1d;
+    --text-secondary: #5e5c58;
+    --border-rule: #dfdad1;
+    --noise-opacity: 0.10;
+    --noise-blend: color-burn;
+    --grain-opacity: 0.12;
+    --ambient-glow-opacity: 0.03;
+  }
+}
+
+/* Custom scrolling rules */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--primary-accent);
+  opacity: 0.3;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-accent);
+}
+
+/* Hardware-accelerated slow drifting aurora loop */
+@keyframes shiftAurora {
+  0% {
+    transform: translate(0%, 0%) scale(1) rotate(0deg);
+  }
+  33% {
+    transform: translate(2%, -3%) scale(1.04) rotate(120deg);
+  }
+  66% {
+    transform: translate(-2%, 2%) scale(0.96) rotate(240deg);
+  }
+  100% {
+    transform: translate(0%, 0%) scale(1) rotate(360deg);
+  }
+}
+
+.heist-aurora-layer {
+  position: fixed;
+  inset: -60%;
+  width: 220%;
+  height: 220%;
+  z-index: -2;
+  pointer-events: none;
+  opacity: 0.06; /* Keep opacity brutally low (5% to 8%) per technical request */
+  background: radial-gradient(
+    circle at 35% 35%,
+    var(--primary-accent) 0%,
+    transparent 60%
+  ),
+  radial-gradient(
+    circle at 75% 65%,
+    var(--muted-accent) 0%,
+    transparent 50%
+  );
+  animation: shiftAurora 25s linear infinite;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.heist-grain-layer {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+  opacity: var(--noise-opacity);
+  mix-blend-mode: var(--noise-blend);
+  
+  /* Pure mathematical base64-equivalent URL encoded SVG turbine turbulence for native texture */
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  background-size: 90px 90px;
+  
+  /* Chunky digital grit */
+  image-rendering: pixelated;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.995); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+

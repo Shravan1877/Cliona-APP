@@ -1,0 +1,8 @@
+{
+  "name": "Cliona",
+  "description": "Cliona: A weird orange sea blob, foul-mouthed hype friend, and ultimate ride-or-die bestie who happens to know some fashion, powered by a dual-layer memory engine.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
