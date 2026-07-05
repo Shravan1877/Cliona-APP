@@ -490,7 +490,7 @@ app.post("/api/upgrade-premium", (req, res) => {
   const session = sessionStore[user_id];
   session.is_unlocked = true;
   session.requires_paywall = false;
-  const hypeMessage = "Omg you actually trusted me and unlocked Premium. I remember absolutely everything we just talked about. Let's build this master blueprint.";
+  const hypeMessage = "Omg you actually trusted me and unlocked Premium. I remember absolutely everything we just talked about. Let's keep this chaos beautifully alive.";
   const hasHype = session.messages.some((m) => m.content === hypeMessage);
   if (!hasHype) {
     session.messages.push({
@@ -528,7 +528,6 @@ app.post("/api/cliona/chat", async (req, res) => {
   }
   const user_id = getSafeUUID(raw_user_id);
   const userText = message ? String(message).trim() : "";
-  const styleAnswers = {};
   if (!userText && !photo && !is_payment_hype) {
     return res.status(400).json({ error: "Message or photo is required." });
   }
@@ -610,10 +609,10 @@ app.post("/api/cliona/chat", async (req, res) => {
   }
   if (photo) {
     if (profile.daily_photo_queries >= limits.photoQueryLimit) {
-      console.log(`\u{1F6A8} [PAYWALL BLOCKED] Daily photo styling limit reached for user ${user_id}.`);
+      console.log(`\u{1F6A8} [PAYWALL BLOCKED] Daily photo query limit reached for user ${user_id}.`);
       return res.status(403).json({
         error: "PHOTO_LIMIT_REACHED",
-        message: "You've used all your daily photo styling requests!"
+        message: "You've used all your daily photo requests!"
       });
     }
   }
@@ -657,7 +656,7 @@ app.post("/api/cliona/chat", async (req, res) => {
           created_at: (/* @__PURE__ */ new Date()).toISOString()
         }
       ]);
-      const { data: sessionData } = await supabase.from("heist_sessions").select("chat_history, session_id").eq("user_id", user_id).maybeSingle();
+      const { data: sessionData } = await supabase.from("cliona_sessions").select("chat_history, session_id").eq("user_id", user_id).maybeSingle();
       let updatedHistory = [];
       if (sessionData && Array.isArray(sessionData.chat_history)) {
         updatedHistory = [...sessionData.chat_history];
@@ -683,8 +682,8 @@ app.post("/api/cliona/chat", async (req, res) => {
         timestamp: (/* @__PURE__ */ new Date()).toISOString(),
         id: `msg_ai_${Date.now()}`
       });
-      const sessionId = sessionData?.session_id || getSafeUUID(`heist-session-${user_id}`);
-      await supabase.from("heist_sessions").upsert({
+      const sessionId = sessionData?.session_id || getSafeUUID(`cliona-session-${user_id}`);
+      await supabase.from("cliona_sessions").upsert({
         session_id: sessionId,
         user_id,
         chat_history: updatedHistory,

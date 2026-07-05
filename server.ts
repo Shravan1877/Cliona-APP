@@ -103,12 +103,12 @@ const sessionStore: Record<string, InSessionState> = {};
 async function querySupermemory(q: string, userId: string): Promise<string> {
   const supermemoryKey = process.env.SUPERMEMORY_API_KEY;
   if (!supermemoryKey) {
-    // Elegant system backup context containing luxury styling rules (Cliona's knowledge pool)
+    // Backup context containing Cliona's general conversational memory rules
     return `
-      Styling context from Cliona Theory:
-      - Deep slate, rich gray, charcoal, and dark teal complements cool undertones flawlessly.
-      - Baggy/oversized silhouettes look spectacular aligned with cropped, fitted elements to maintain height and crisp posture.
-      - Contrast and proportion balancing (60/40 rule) provides effortless streetwear and Old Money styles. Keep accessories minimal yet high-concept.
+      Cliona context:
+      - Keep replies emotionally present, supportive, and focused on the user's current situation.
+      - Preserve continuity by remembering recurring people, plans, worries, wins, and preferences.
+      - Ask direct follow-up questions that keep the conversation moving naturally.
     `;
   }
 
@@ -681,7 +681,7 @@ app.post("/api/upgrade-premium", (req, res) => {
   session.is_unlocked = true;
   session.requires_paywall = false;
   
-  const hypeMessage = "Omg you actually trusted me and unlocked Premium. I remember absolutely everything we just talked about. Let's build this master blueprint.";
+  const hypeMessage = "Omg you actually trusted me and unlocked Premium. I remember absolutely everything we just talked about. Let's keep this chaos beautifully alive.";
   const hasHype = session.messages.some(m => m.content === hypeMessage);
   if (!hasHype) {
     session.messages.push({
@@ -728,7 +728,6 @@ app.post("/api/cliona/chat", async (req, res) => {
   }
   const user_id = getSafeUUID(raw_user_id);
   const userText = message ? String(message).trim() : "";
-  const styleAnswers: Record<string, any> = {};
   
   if (!userText && !photo && !is_payment_hype) {
     return res.status(400).json({ error: "Message or photo is required." });
@@ -846,10 +845,10 @@ app.post("/api/cliona/chat", async (req, res) => {
   // --- 2. Photo Gate ---
   if (photo) {
     if (profile.daily_photo_queries >= limits.photoQueryLimit) {
-      console.log(`🚨 [PAYWALL BLOCKED] Daily photo styling limit reached for user ${user_id}.`);
+      console.log(`🚨 [PAYWALL BLOCKED] Daily photo query limit reached for user ${user_id}.`);
       return res.status(403).json({
         error: "PHOTO_LIMIT_REACHED",
-        message: "You've used all your daily photo styling requests!"
+        message: "You've used all your daily photo requests!"
       });
     }
   }
@@ -895,7 +894,7 @@ app.post("/api/cliona/chat", async (req, res) => {
     const updatedPhotoQueries = (profile.daily_photo_queries || 0) + (photo ? 1 : 0);
     const updatedMessageCount = (profile.message_count || 0) + 1;
 
-    // Await saving to heist_sessions and messages tables in Supabase
+    // Await saving to cliona_sessions and messages tables in Supabase
     if (supabase && user_id) {
       // 1. Save assistant message to messages table
       await supabase
@@ -909,9 +908,9 @@ app.post("/api/cliona/chat", async (req, res) => {
           }
         ]);
 
-      // 2. Fetch current heist_sessions to get chat history
+      // 2. Fetch current cliona_sessions to get chat history
       const { data: sessionData } = await supabase
-        .from("heist_sessions")
+        .from("cliona_sessions")
         .select("chat_history, session_id")
         .eq("user_id", user_id)
         .maybeSingle();
@@ -947,10 +946,10 @@ app.post("/api/cliona/chat", async (req, res) => {
         id: `msg_ai_${Date.now()}`
       });
 
-      const sessionId = sessionData?.session_id || getSafeUUID(`heist-session-${user_id}`);
+      const sessionId = sessionData?.session_id || getSafeUUID(`cliona-session-${user_id}`);
 
       await supabase
-        .from("heist_sessions")
+        .from("cliona_sessions")
         .upsert({
           session_id: sessionId,
           user_id: user_id,

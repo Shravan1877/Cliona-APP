@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Send, Sparkles, User, RefreshCw, LogOut, CheckCircle2, Lock, Settings, X, Image } from "lucide-react";
 import { getSupabase } from "../lib/supabase";
 import { getApiUrl } from "../lib/api";
-import heistLogo from "../assets/Heist-Logo.png";
+import clionaLogo from "../assets/Cliona-Logo.png";
 import { TIER_CONFIG } from "../lib/tier_config";
 import GsapSerifHeader from "./GsapSerifHeader";
 
@@ -131,7 +131,7 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
       if (sliceToSync.length === 0) return;
 
       console.log(`[Sliding Window] Synchronizing batch of ${sliceToSync.length} messages (indices ${startIndex} to ${endIndex}) to server...`);
-      
+
       const response = await fetch(getApiUrl("/api/chat/batch-sync"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -170,7 +170,7 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
   const setMessages = (newValue: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => {
     setLocalChatBuffer((prev) => {
       const next = typeof newValue === "function" ? newValue(prev) : newValue;
-      
+
       if (next.length > prev.length && prev.length > 0) {
         // This is an append! Immediately evaluate the length of the buffer.
         if (next.length === 8 && sync_cursor === 0) {
@@ -244,7 +244,7 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
       });
       if (response.ok) {
         setAdminPlan(selectedPlan);
-        
+
         // Synchronise client-side state
         if (selectedPlan !== "free") {
           setPaywallActive(false);
@@ -323,7 +323,7 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
 
   // Load existing profile & historical chat dumps from localStorage / Supabase
   useEffect(() => {
-    const doneKey = `heist_onboarding_done_${userId}`;
+    const doneKey = `cliona_onboarding_done_${userId}`;
 
     const cachedDoneStr = localStorage.getItem(doneKey);
 
@@ -334,7 +334,7 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
     async function loadProfileAndVerifyCloudSession() {
       const supabase = getSupabase();
       if (!supabase || !userId) return;
-      
+
       try {
         // Query Profile for premium validation
         const { data: profile } = await supabase
@@ -342,7 +342,7 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
           .select("plan, is_premium, onboarding_step, monthly_groq_tokens, daily_photo_queries")
           .eq("id", getSafeUUID(userId))
           .single();
-          
+
         if (profile) {
           if (profile.monthly_groq_tokens !== undefined) {
              setMonthlyGroqTokens(profile.monthly_groq_tokens || 0);
@@ -353,7 +353,7 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
           if (profile.plan) {
              setAdminPlan(profile.plan);
           }
-          
+
           const currentPlan = (profile.plan || "free").toLowerCase().trim();
           const isPremiumPlan = ["core", "flux", "unlocked"].includes(currentPlan);
 
@@ -381,7 +381,7 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
         const url = getApiUrl(`/api/chat/history/${safeUserId}?limit=20`);
         console.log(`[BOOT] Fetching initial 20 messages from: ${url}`);
         const response = await fetch(url);
-        
+
         if (response.ok) {
           const data = await response.json();
           const apiMessages: ChatMessage[] = (data.messages || []).map((m: any, index: number) => ({
@@ -395,7 +395,7 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
             // Set ui_display_messages equal to this fetched array
             setUiDisplayMessages(apiMessages);
 
-            // **CRITICAL LLM PROTECTION:** Take ONLY the most recent 8 messages from that fetch, 
+            // **CRITICAL LLM PROTECTION:** Take ONLY the most recent 8 messages from that fetch,
             // and initialize the local_chat_buffer with them.
             const recent8 = apiMessages.slice(-8);
             setLocalChatBuffer(recent8);
@@ -403,7 +403,7 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
             setHasMoreHistory(data.has_more ?? (apiMessages.length === 20));
             console.log(`[BOOT] Loaded ${apiMessages.length} messages. Set local chat buffer to most recent ${recent8.length}`);
           } else {
-            const historyKey = `heist_chat_history_${userId}`;
+            const historyKey = `cliona_chat_history_${userId}`;
             const cachedHistoryRaw = localStorage.getItem(historyKey);
             if (cachedHistoryRaw) {
               try {
@@ -444,7 +444,7 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
         const initMsg: ChatMessage = {
           id: "init_msg",
           role: "cliona",
-          content: "hey bestie. welcome to Cliona, where your aesthetic coordinates get absolutely roasted or meticulously built by a faceless, orange sea-sponge blob (me). before we lock in your ultimate master blueprint... what is the most embarrassing fashion phase you have ever survived, or what is your primary styling ick on this glitchy planet? do not hold back, let's start yapping.",
+          content: "hey bestie. welcome to Cliona. i'm your loud little orange chaos blob, here to hype you up, listen to the lore, and keep the conversation brutally real. what are we yapping about first today?",
           timestamp: new Date(),
           isNew: true
         };
@@ -477,8 +477,8 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
   // Sync to local state instantly on modification
   useEffect(() => {
     if (messages.length === 0) return;
-    const historyKey = `heist_chat_history_${userId}`;
-    const doneKey = `heist_onboarding_done_${userId}`;
+    const historyKey = `cliona_chat_history_${userId}`;
+    const doneKey = `cliona_onboarding_done_${userId}`;
 
     localStorage.setItem(historyKey, JSON.stringify(messages));
     localStorage.setItem(doneKey, String(isOnboardingDone));
@@ -558,13 +558,13 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
           timestamp: m.created_at ? new Date(m.created_at) : new Date()
         }));
 
-        const historyKey = `heist_chat_history_${userId}`;
-        const sessionKey = `heist_session_id_${userId}`;
+        const historyKey = `cliona_chat_history_${userId}`;
+        const sessionKey = `cliona_session_id_${userId}`;
 
         setMessages(parsedHistory);
-        localStorage.setItem(sessionKey, safeUserId);
+        localStorage.setItem(sessionKey, `cliona-session-${safeUserId}`);
         localStorage.setItem(historyKey, JSON.stringify(parsedHistory));
-        
+
         setShowRestorePrompt(false);
         console.log("[Recovery] Successfully restored messages from database.");
       } else {
@@ -667,7 +667,6 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
       });
 
       const data = await response.json();
-      setIsTyping(false);
 
       if (response.status === 403 || data.error === "PAYWALL_HIT") {
         if (adminPlan.toLowerCase().trim() === "free") {
@@ -718,8 +717,21 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
         setPaymentSuccess(true);
         setIsOnboardingDone(true);
       }
-    } catch (err) {
-      console.warn("AI chat fetch failed:", err);
+    } catch (error) {
+      console.error("AI chat fetch failed:", error);
+
+      // Inject an explicit system error bubble
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `system_${Date.now()}`,
+          role: "system",
+          content: "System: Connection to Cliona engine lost. Please try again.",
+          timestamp: new Date(),
+          isNew: true
+        }
+      ]);
+    } finally {
       setIsTyping(false);
     }
   };
@@ -745,8 +757,8 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
       setPaymentSuccess(true);
       setIsOnboardingDone(true);
 
-      const hypeText = data.hype_message || "Omg you actually trusted me and unlocked Premium. I remember absolutely everything we just talked about. Let's build this master blueprint.";
-      
+      const hypeText = data.hype_message || "Omg you actually trusted me and unlocked Premium. I remember absolutely everything we just talked about. Let's keep this chaos beautifully alive.";
+
       setMessages((prev) => [
         ...prev,
         {
@@ -768,7 +780,7 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
 
   return (
     <div className="flex-grow flex flex-col h-screen max-h-screen bg-transparent text-[var(--text-primary)] overflow-hidden relative font-sans shrink-0">
-      
+
       {/* HEADER BAR - ALWAYS PERSISTENTLY STICKY & FLUID */}
       <header className="relative w-full bg-[var(--bg-base)]/90 border-b border-[var(--border-rule)] flex h-16 items-center justify-between px-4 md:px-10 shrink-0 select-none text-[var(--text-primary)] transition-all duration-350 ease-in-out">
         <div className="flex items-center space-x-2 md:space-x-4">
@@ -788,10 +800,10 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
         </div>
 
         <div className="flex items-center space-x-3">
-          <button 
+          <button
             onClick={() => {
               window.history.pushState({}, "", "/settings");
-              window.dispatchEvent(new Event("heist-navigate"));
+              window.dispatchEvent(new Event("cliona-navigate"));
             }}
             title="Settings"
             className="flex items-center space-x-1 px-3 py-1.5 border border-[var(--border-rule)] bg-[var(--surface-card)]/80 rounded-xl text-[var(--text-primary)] hover:bg-[var(--surface-card)] active:scale-95 transition-all text-xs font-bold cursor-pointer shadow-sm animate-pulse-short"
@@ -804,23 +816,23 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
 
       {/* WRAPPER CO-PRESENTING MAIN CHAT & ADMIN RUNTIME BAR WITH OFFSET */}
       <div className="flex-grow flex flex-col lg:flex-row overflow-hidden relative">
-        
+
         {/* CHAT CONTAINER AREA */}
         <main className="flex-1 flex flex-col relative bg-transparent overflow-hidden border-r border-[var(--border-rule)]">
-          
+
           {/* CHAT SCREEN WITH TRANSITIONAL EFFECTS */}
           <div className={`flex-1 p-4 md:p-8 flex flex-col justify-between overflow-hidden relative h-full ${(paywallActive && adminPlan.toLowerCase().trim() === "free") ? "backdrop-blur-md pointer-events-none select-none blur-sm" : ""}`}>
-            <div 
+            <div
               ref={chatContainerRef}
               onScroll={handleContainerScroll}
               className="flex-grow overflow-y-auto space-y-6 py-4 px-2 md:px-4"
             >
                {isFetchingHistory && (
                 <div id="history-loading-spinner" className="flex items-center justify-center space-x-3 py-2 text-zinc-300">
-                  <img 
-                    src={heistLogo} 
-                    alt="Cliona History Processing" 
-                    className="w-4 h-4 animate-spin opacity-80" 
+                  <img
+                    src={clionaLogo}
+                    alt="Cliona History Processing"
+                    className="w-4 h-4 animate-spin opacity-80"
                     referrerPolicy="no-referrer"
                     style={{ animationDuration: '2.5s', animationTimingFunction: 'linear' }}
                   />
@@ -849,7 +861,7 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
                 const isUser = msg.role === "user";
                 const msgTime = (msg.timestamp instanceof Date ? msg.timestamp : new Date(String(msg.timestamp))).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 return (
-                  <div 
+                  <div
                     key={`${msg.id}-${index}`}
                     className={`max-w-[85%] md:max-w-[75%] flex flex-col ${isUser ? "ml-auto" : ""}`}
                   >
@@ -862,9 +874,9 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
                     ) : (
                       <div className="py-2 text-[var(--text-primary)]">
                         <p className="text-[17px] md:text-[19px] lg:text-[21px] leading-relaxed font-medium text-[var(--text-primary)] font-sans">
-                          <StreamedText 
-                            content={msg.content} 
-                            enabled={!!msg.isNew} 
+                          <StreamedText
+                            content={msg.content}
+                            enabled={!!msg.isNew}
                             onCharacterTyped={() => {
                               handleScrollToBottom(false);
                             }}
@@ -873,7 +885,7 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
                       </div>
                     )}
                     <span className="text-[10px] text-[var(--text-secondary)] mt-1.5 uppercase tracking-widest px-1 font-mono font-bold select-none opacity-80">
-                      {msg.role === "cliona" ? "Cliona" : "Me"} • {msgTime}
+                      {msg.role === "cliona" ? "Cliona" : msg.role === "system" ? "System" : "Me"} • {msgTime}
                     </span>
                   </div>
                 );
@@ -900,8 +912,8 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
                     if (e.key === "Enter") handleUserAnswer(userInput);
                   }}
                   placeholder={
-                    paywallActive 
-                      ? "Master styling blueprints locking..." 
+                    paywallActive
+                      ? "Cliona Premium is unlocking..."
                       : isTyping
                         ? "Cliona is thinking..."
                         : "Type here to chat..."
@@ -926,7 +938,7 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
           <AnimatePresence>
             {(paywallActive && adminPlan.toLowerCase().trim() === "free") && (
               <div id="paywall-wrapper" className="absolute inset-0 bg-slate-900/60 z-50 flex items-end justify-center backdrop-blur-sm">
-                <motion.div 
+                <motion.div
                   initial={{ y: "100%", opacity: 0.8 }}
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: "100%", opacity: 0.8 }}
@@ -948,54 +960,54 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
                     <div className="mx-auto w-10 h-10 bg-slate-105 rounded-full flex items-center justify-center text-teal-950">
                       <Lock size={18} />
                     </div>
-                    
+
                     <GsapSerifHeader
                       tag="h3"
                       className="text-2xl md:text-3xl font-normal text-slate-900 italic tracking-tight"
                     >
-                      Style DNA Premium Plans
+                      Cliona Premium Plans
                     </GsapSerifHeader>
-                    
+
                     <p className="text-xs text-slate-600 font-bold px-4 leading-relaxed font-sans max-w-sm mx-auto">
-                      Cliona has compiled your styling coordinates. Upgrade your allowance tier to remove limits and unlock continuing conversation.
+                      Upgrade your allowance tier to remove limits, preserve stronger memory, and unlock continuing conversation.
                     </p>
                   </div>
 
                   {/* Multi-Tier Selectors connected to Supabase */}
                   <div className="space-y-3 pt-1">
                     {[
-                      { 
-                        key: "core", 
-                        title: "Cliona Core", 
+                      {
+                        key: "core",
+                        title: "Cliona Core",
                         cost: "₹149/mo",
-                        tokens: "4.5M Monthly Tokens", 
-                        photos: "10 daily photo queries", 
+                        tokens: "4.5M Monthly Tokens",
+                        photos: "10 daily photo queries",
                         memory: "Standard Memory (100 saved facts)"
                       },
-                      { 
-                        key: "flux", 
-                        title: "Cliona Flex", 
+                      {
+                        key: "flux",
+                        title: "Cliona Flex",
                         cost: "₹299/mo",
-                        tokens: "8.0M Monthly Tokens", 
-                        photos: "30 daily photo queries", 
+                        tokens: "8.0M Monthly Tokens",
+                        photos: "30 daily photo queries",
                         memory: "Elite Supermemory (Saves top 10% of facts)"
                       },
-                      { 
-                        key: "unlocked", 
-                        title: "Cliona Unlocked", 
+                      {
+                        key: "unlocked",
+                        title: "Cliona Unlocked",
                         cost: "₹499/mo",
-                        tokens: "Unlimited AI Tokens", 
-                        photos: "50 daily photo queries", 
+                        tokens: "Unlimited AI Tokens",
+                        photos: "50 daily photo queries",
                         memory: "Ultimate Supermemory (Saves top 40% of facts)"
                       }
                     ].map((tier) => {
                       const isThisPlan = adminPlan.toLowerCase().trim() === tier.key;
                       return (
-                        <div 
+                        <div
                           key={tier.key}
                           className={`p-3.5 rounded-2xl border transition-all pointer-events-auto flex justify-between items-center ${
-                            isThisPlan 
-                              ? "bg-teal-50 border-teal-900 shadow-md ring-2 ring-teal-950/20" 
+                            isThisPlan
+                              ? "bg-teal-50 border-teal-900 shadow-md ring-2 ring-teal-950/20"
                               : "bg-slate-55 hover:bg-slate-100 border-slate-200"
                           }`}
                         >
@@ -1012,7 +1024,7 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
                               • {tier.memory}
                             </p>
                           </div>
-                          
+
                           <button
                             disabled={isThisPlan || isUpgradingPlan !== null}
                             onClick={() => handleUpgradePlan(tier.key)}
@@ -1022,10 +1034,10 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
                                 : "bg-teal-900 hover:bg-teal-950 text-white hover:shadow-sm"
                             }`}
                           >
-                            {isUpgradingPlan === tier.key 
-                              ? "Joining..." 
-                              : isThisPlan 
-                                ? "Active" 
+                            {isUpgradingPlan === tier.key
+                              ? "Joining..."
+                              : isThisPlan
+                                ? "Active"
                                 : `Select - ${tier.cost}`
                             }
                           </button>
@@ -1036,7 +1048,7 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
 
                   <div className="pt-2 text-center flex flex-col items-center justify-center space-y-1">
                     {paywallReason ? (
-                      <button 
+                      <button
                         onClick={() => {
                           setPaywallActive(false);
                           setPaywallReason("");
@@ -1046,7 +1058,7 @@ export default function Onboarding({ userEmail, userId, onLogout }: OnboardingPr
                         Dismiss & close preview
                       </button>
                     ) : (
-                      <button 
+                      <button
                         onClick={onLogout}
                         className="text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:underline hover:text-slate-700 cursor-pointer"
                       >

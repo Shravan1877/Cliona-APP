@@ -22,7 +22,7 @@ export default function InstallPrompt() {
       // Store the event
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       // Only show if the user hasn't dismissed it in this browser session
-      const isDismissed = sessionStorage.getItem("heist_pwa_prompt_dismissed");
+      const isDismissed = sessionStorage.getItem("cliona_pwa_prompt_dismissed");
       if (!isDismissed) {
         setIsVisible(true);
       }
@@ -32,7 +32,7 @@ export default function InstallPrompt() {
 
     // Optional: detect if already installed
     const handleAppInstalled = () => {
-      console.log("HEIST PWA successfully installed!");
+      console.log("CLIONA PWA successfully installed!");
       setIsVisible(false);
       setDeferredPrompt(null);
     };
@@ -61,7 +61,7 @@ export default function InstallPrompt() {
 
   const handleDismissClick = () => {
     // Suppress prompt for current session
-    sessionStorage.setItem("heist_pwa_prompt_dismissed", "true");
+    sessionStorage.setItem("cliona_pwa_prompt_dismissed", "true");
     setIsVisible(false);
   };
 
@@ -75,7 +75,7 @@ export default function InstallPrompt() {
         exit={{ opacity: 0, y: 20, scale: 0.95 }}
         transition={{ type: "spring", stiffness: 350, damping: 25 }}
         className="fixed bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-[400px] bg-slate-950/95 backdrop-blur-xl border border-slate-800/80 p-5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] z-[99999] flex flex-col space-y-4 font-sans"
-        id="heist-pwa-install-prompt"
+        id="cliona-pwa-install-prompt"
       >
         <div className="flex items-start justify-between">
           <div className="flex space-x-3">

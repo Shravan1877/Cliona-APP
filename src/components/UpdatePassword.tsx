@@ -58,8 +58,8 @@ export default function UpdatePassword() {
       if (updateError) throw updateError;
 
       // Unset any local cached user logins to provoke a fresh authentication
-      localStorage.removeItem("heist_user_email");
-      localStorage.removeItem("heist_user_id");
+      localStorage.removeItem("cliona_user_email");
+      localStorage.removeItem("cliona_user_id");
 
       setSuccess(true);
     } catch (err: any) {
@@ -72,7 +72,7 @@ export default function UpdatePassword() {
 
   const navigateToLogin = () => {
     window.history.pushState({}, "", "/");
-    window.dispatchEvent(new Event("heist-navigate"));
+    window.dispatchEvent(new Event("cliona-navigate"));
   };
 
   return (

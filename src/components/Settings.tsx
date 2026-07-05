@@ -34,7 +34,7 @@ export default function Settings({ userEmail, userId, onLogout, onBack }: Settin
   const [isUpgradingPlan, setIsUpgradingPlan] = useState<string | null>(null);
 
   const [themeMode, setThemeMode] = useState<"system" | "light" | "dark">(() => {
-    const cached = localStorage.getItem("heist-theme-choice") as "system" | "light" | "dark" | null;
+    const cached = localStorage.getItem("cliona-theme-choice") as "system" | "light" | "dark" | null;
     return cached || "system";
   });
 
@@ -46,10 +46,10 @@ export default function Settings({ userEmail, userId, onLogout, onBack }: Settin
     } else if (themeMode === "dark") {
       root.classList.add("dark");
     }
-    localStorage.setItem("heist-theme-choice", themeMode);
+    localStorage.setItem("cliona-theme-choice", themeMode);
     
     // Dispatch custom event to notify App.tsx immediately for dynamic background switching
-    window.dispatchEvent(new CustomEvent("heist-theme-choice-changed", { detail: themeMode }));
+    window.dispatchEvent(new CustomEvent("cliona-theme-choice-changed", { detail: themeMode }));
   }, [themeMode]);
 
   // Load profile state
@@ -200,7 +200,7 @@ export default function Settings({ userEmail, userId, onLogout, onBack }: Settin
                 <GsapSerifHeader tag="h3" className="text-xl md:text-2xl font-normal italic tracking-tight uppercase" key="profile">
                   Profile & Preferences
                 </GsapSerifHeader>
-                <p className="text-xs text-[var(--text-secondary)] mt-1">Configure active user specifications & aesthetic styles.</p>
+                <p className="text-xs text-[var(--text-secondary)] mt-1">Configure active user details and conversation preferences.</p>
               </div>
 
               {/* Active account details */}
@@ -367,7 +367,7 @@ export default function Settings({ userEmail, userId, onLogout, onBack }: Settin
 
                 <div className="space-y-2">
                   <p className="font-black text-[var(--text-primary)] uppercase tracking-wide">2. AI System Advice & Limitations</p>
-                  <p>Aesthetic style recommendations, fiber guidelines, hair undertone classifications, and bone symmetry scores are generated utilizing Gemini and Groq server models. For similarity matching and vector search, we strictly utilize the Gemini embedding model, while text-based LLM queries are handled through the Groq console without any change to fast conversational generation.</p>
+                  <p>Conversational responses, memory summaries, reminders, and supportive suggestions are generated utilizing Gemini and Groq server models. For similarity matching and vector search, we strictly utilize the Gemini embedding model, while text-based LLM queries are handled through the Groq console without any change to fast conversational generation.</p>
                 </div>
 
                 <div className="space-y-2">
@@ -377,7 +377,7 @@ export default function Settings({ userEmail, userId, onLogout, onBack }: Settin
 
                 <div className="space-y-2">
                   <p className="font-black text-[var(--text-primary)] uppercase tracking-wide">4. Privacy & Vector Supermemory</p>
-                  <p>UserData is preserved with lightweight Supabase storage backends. Dynamic styling traces are indexed into high-performance vector databases when plan rules allow. If you wish to wipe your styling context, you can purge database profiles at any point.</p>
+                  <p>UserData is preserved with lightweight Supabase storage backends. Dynamic conversation traces are indexed into high-performance vector databases when plan rules allow. If you wish to wipe your conversation context, you can purge database profiles at any point.</p>
                 </div>
               </div>
             </div>
