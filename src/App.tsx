@@ -7,11 +7,9 @@ import ForgotPassword from "./components/ForgotPassword";
 import UpdatePassword from "./components/UpdatePassword";
 import Settings from "./components/Settings";
 import { getApiUrl } from "./lib/api";
-import { HeistDarkBackground } from "./components/HeistDarkBackground";
-import { HeistLightBackground } from "./components/HeistLightBackground";
 
-export function getOrCreateHeistUserId(): string {
-  const STORAGE_KEY = "heist_user_id";
+export function getOrCreateClionaUserId(): string {
+  const STORAGE_KEY = "cliona_user_id";
   let id = localStorage.getItem(STORAGE_KEY);
   if (!id) {
     if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -43,7 +41,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [path, setPath] = useState<string>(window.location.pathname);
   const [activeTheme, setActiveTheme] = useState<string>(() => {
-    return localStorage.getItem("heist-theme-choice") || "system";
+    return localStorage.getItem("cliona-theme-choice") || "system";
   });
 
   // Listen for custom simple navigation events to keep path in sync beautifully
@@ -72,30 +70,30 @@ export default function App() {
 
     const handleThemeChange = (e: Event) => {
       const customEvent = e as CustomEvent<string>;
-      const newTheme = customEvent.detail || localStorage.getItem("heist-theme-choice") || "system";
+      const newTheme = customEvent.detail || localStorage.getItem("cliona-theme-choice") || "system";
       setActiveTheme(newTheme);
       applyTheme(newTheme);
     };
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleSystemThemeChange = () => {
-      if (localStorage.getItem("heist-theme-choice") === "system") {
+      if (localStorage.getItem("cliona-theme-choice") === "system") {
         applyTheme("system");
         setActiveTheme("system");
       }
     };
 
     window.addEventListener("popstate", handleLocationChange);
-    window.addEventListener("heist-navigate", handleLocationChange);
-    window.addEventListener("heist-theme-choice-changed", handleThemeChange);
+    window.addEventListener("cliona-navigate", handleLocationChange);
+    window.addEventListener("cliona-theme-choice-changed", handleThemeChange);
     if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener("change", handleSystemThemeChange);
     }
 
     return () => {
       window.removeEventListener("popstate", handleLocationChange);
-      window.removeEventListener("heist-navigate", handleLocationChange);
-      window.removeEventListener("heist-theme-choice-changed", handleThemeChange);
+      window.removeEventListener("cliona-navigate", handleLocationChange);
+      window.removeEventListener("cliona-theme-choice-changed", handleThemeChange);
       if (mediaQuery.removeEventListener) {
         mediaQuery.removeEventListener("change", handleSystemThemeChange);
       }
@@ -118,8 +116,8 @@ export default function App() {
         console.warn("Failed loading Dynamic Supabase configuration:", err);
       }
 
-      let savedEmail = localStorage.getItem("heist_user_email");
-      let activeUserId = localStorage.getItem("heist_user_id");
+      let savedEmail = localStorage.getItem("cliona_user_email");
+      let activeUserId = localStorage.getItem("cliona_user_id");
 
       const { getSupabase } = await import("./lib/supabase");
       const supabase = getSupabase();
@@ -158,9 +156,9 @@ export default function App() {
             const user = userSession.user;
             activeUserId = user.id;
             savedEmail = user.email || null;
-            localStorage.setItem("heist_user_id", activeUserId);
+            localStorage.setItem("cliona_user_id", activeUserId);
             if (savedEmail) {
-              localStorage.setItem("heist_user_email", savedEmail);
+              localStorage.setItem("cliona_user_email", savedEmail);
             }
 
             const { data: profile } = await supabase
@@ -174,7 +172,7 @@ export default function App() {
               await supabase.from("profiles").insert([
                 {
                   id: activeUserId,
-                  full_name: user.user_metadata?.full_name || savedEmail?.split("@")[0] || "Stylist User",
+                  full_name: user.user_metadata?.full_name || savedEmail?.split("@")[0] || "Cliona User",
                   avatar_url: user.user_metadata?.avatar_url || null,
                   scan_credits: 5,
                   batch_credits: 8,
@@ -199,7 +197,7 @@ export default function App() {
       }
 
       if (!activeUserId) {
-        activeUserId = getOrCreateHeistUserId();
+        activeUserId = getOrCreateClionaUserId();
       }
 
       if (savedEmail) {
@@ -213,15 +211,15 @@ export default function App() {
   }, []);
 
   const handleLoginSuccess = (email: string, id: string) => {
-    localStorage.setItem("heist_user_email", email);
-    localStorage.setItem("heist_user_id", id);
+    localStorage.setItem("cliona_user_email", email);
+    localStorage.setItem("cliona_user_id", id);
     setUserEmail(email);
     setUserId(id);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("heist_user_email");
-    localStorage.removeItem("heist_user_id");
+    localStorage.removeItem("cliona_user_email");
+    localStorage.removeItem("cliona_user_id");
     
     import("./lib/supabase").then(({ getSupabase }) => {
       const supabase = getSupabase();
@@ -239,7 +237,8 @@ export default function App() {
   if (isLoading) {
     return (
       <div className={`min-h-screen w-full ${showLight ? "bg-[#F9F8F6]" : "bg-black"} text-[var(--text-primary)] flex items-center justify-center font-sans relative overflow-hidden`}>
-        {showLight ? <HeistLightBackground /> : <HeistDarkBackground />}
+        <div className="cliona-aurora-layer" />
+        <div className="cliona-grain-layer" />
 
         <div className="text-center space-y-4 z-10">
           <div className="w-10 h-10 border-4 border-[var(--primary-accent)] border-t-transparent rounded-full animate-spin mx-auto" />
@@ -256,7 +255,7 @@ export default function App() {
       <Legal 
         onBack={() => {
           window.history.pushState({}, "", "/");
-          window.dispatchEvent(new Event("heist-navigate"));
+          window.dispatchEvent(new Event("cliona-navigate"));
         }} 
       />
     );
@@ -271,7 +270,7 @@ export default function App() {
           onLogout={handleLogout}
           onBack={() => {
             window.history.pushState({}, "", "/");
-            window.dispatchEvent(new Event("heist-navigate"));
+            window.dispatchEvent(new Event("cliona-navigate"));
           }}
         />
       );
@@ -294,7 +293,8 @@ export default function App() {
 
   return (
     <div className={`min-h-screen w-full ${showLight ? "bg-[#F9F8F6]" : "bg-black"} text-[var(--text-primary)] transition-colors duration-300 overflow-hidden flex flex-col animate-fadeIn relative`}>
-      {showLight ? <HeistLightBackground /> : <HeistDarkBackground />}
+      <div className="cliona-aurora-layer" />
+      <div className="cliona-grain-layer" />
       
       <div className="flex-grow flex flex-col z-10 relative overflow-hidden">
         {userEmail && userId ? (

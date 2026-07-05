@@ -107,7 +107,7 @@
   }
 }
 
-.heist-aurora-layer {
+.cliona-aurora-layer {
   position: fixed;
   inset: -60%;
   width: 220%;
@@ -130,7 +130,7 @@
   will-change: transform;
 }
 
-.heist-grain-layer {
+.cliona-grain-layer {
   position: fixed;
   inset: 0;
   width: 100%;

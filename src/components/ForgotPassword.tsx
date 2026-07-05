@@ -77,7 +77,7 @@ export default function ForgotPassword() {
 
   const navigateToLogin = () => {
     window.history.pushState({}, "", "/");
-    window.dispatchEvent(new Event("heist-navigate"));
+    window.dispatchEvent(new Event("cliona-navigate"));
   };
 
   return (

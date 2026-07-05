@@ -23,9 +23,9 @@ export default function Legal({ onBack }: LegalProps) {
             <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
             <span>Go Back</span>
           </button>
-          
+
           <div className="h-5 w-[1px] bg-neutral-800 hidden sm:block" />
-          
+
           <div className="hidden sm:flex items-center space-x-2">
             <span className="font-mono text-xs font-bold text-neutral-500 tracking-widest uppercase">STYLING PROTOCOL</span>
             <span className="text-teal-500 font-mono text-[10px] bg-teal-500/10 px-2 py-0.5 rounded-full border border-teal-500/20">v3.1.LEGAL</span>
@@ -41,7 +41,7 @@ export default function Legal({ onBack }: LegalProps) {
 
       {/* Main Container */}
       <div className="flex-1 w-full max-w-7xl mx-auto px-4 py-8 md:py-12 flex flex-col md:flex-row gap-8 lg:gap-12">
-        
+
         {/* Navigation Sidebar / Tab List */}
         <aside className="w-full md:w-64 lg:w-72 shrink-0 space-y-6">
           <div className="bg-[#0f0f0f] border border-neutral-900 rounded-3xl p-6 space-y-4">
@@ -49,7 +49,7 @@ export default function Legal({ onBack }: LegalProps) {
               <p className="text-[10px] text-neutral-500 uppercase tracking-widest font-mono font-black">Governance & Policy</p>
               <h2 className="text-lg font-extrabold text-white uppercase tracking-tight mt-1">Legal Center</h2>
             </div>
-            
+
             <p className="text-xs text-[#a3a3a3] leading-relaxed">
               Please review the official regulatory terms, privacy guidelines, and final transaction boundaries for utilizing the <strong>CLIONA.</strong> engine.
             </p>
@@ -125,7 +125,7 @@ export default function Legal({ onBack }: LegalProps) {
 
         {/* Policy Content Viewer */}
         <main className="flex-1 bg-[#0a0a0a]/50 border border-neutral-900 rounded-3xl p-6 md:p-10 relative overflow-hidden">
-          
+
           {/* Glowing accent backdrops */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-neutral-900/50 rounded-full blur-3xl pointer-events-none" />
@@ -163,7 +163,7 @@ export default function Legal({ onBack }: LegalProps) {
                   <div>
                     <h2 className="text-[#a3a3a3] font-extrabold uppercase text-xs tracking-wider font-mono mb-2">2. Strict Delivery Confirmation</h2>
                     <p className="pl-4 border-l border-neutral-800">
-                      Once our multi-layer aesthetic engine completes running reports, or once the chat portal of the Cliona AI becomes accessed or unlocked, digital fulfillment is deemed 100% complete. CLIONA. is not liable for subjective opinions about fashion guidance, fit checks, or aesthetic reports. Once generated, the digital reports are mapped permanently onto our decentralized cloud system.
+                      Once the chat portal of the Cliona AI becomes accessed or unlocked, digital fulfillment is deemed 100% complete. CLIONA. is not liable for subjective opinions about conversational guidance, reminders, or memory summaries. Once generated, digital conversation records are mapped permanently onto our decentralized cloud system.
                     </p>
                   </div>
 
@@ -212,9 +212,9 @@ export default function Legal({ onBack }: LegalProps) {
                   </div>
 
                   <div>
-                    <h2 className="text-[#a3a3a3] font-extrabold uppercase text-xs tracking-wider font-mono mb-2">1. Front & Side Selfie Photo Analysis</h2>
+                    <h2 className="text-[#a3a3a3] font-extrabold uppercase text-xs tracking-wider font-mono mb-2">1. Optional Photo Processing</h2>
                     <p className="pl-4 border-l border-neutral-800">
-                      User photos uploaded for the Style Diagnostic are processed using advanced localized client-side compression to minimize payload size. They are securely transmitted to our Vision APIs solely for the purpose of geometric bone-structure extraction, custom styling alignment, and hair/undertone classification. 
+                      User photos uploaded for optional conversational context are processed using advanced localized client-side compression to minimize payload size. They are securely transmitted to our Vision APIs solely for the purpose of generating relevant, user-requested conversational context.
                     </p>
                   </div>
 
@@ -228,7 +228,7 @@ export default function Legal({ onBack }: LegalProps) {
                   <div>
                     <h2 className="text-[#a3a3a3] font-extrabold uppercase text-xs tracking-wider font-mono mb-2">3. Chat Logs and Thread Memory</h2>
                     <p className="pl-4 border-l border-neutral-800">
-                      Chats with the Cliona AI are stored securely across isolated namespaces to maintain conversation memory, support conversational context, and allow your digital stylist best friend to remember your personal anecdotes, styling issues, and preferences. 
+                      Chats with the Cliona AI are stored securely across isolated namespaces to maintain conversation memory, support conversational context, and allow your digital best friend to remember your personal anecdotes, recurring topics, and preferences.
                     </p>
                   </div>
 
@@ -274,14 +274,14 @@ export default function Legal({ onBack }: LegalProps) {
                   <div>
                     <h2 className="text-[#a3a3a3] font-extrabold uppercase text-xs tracking-wider font-mono mb-2">1. Artificial Intelligence Disclaimer</h2>
                     <p className="pl-4 border-l border-neutral-800">
-                      <strong>All styling reports, material metrics, fit classifications, and conversational interactions provided by "Cliona" are generated by Artificial Intelligence algorithms.</strong> These recommendations are for entertainment, aesthetic guidance, and educational inspiration only. Cliona acts as a digital wingman; CLIONA. does not guarantee specific real-world outcomes, social feedback, or compatibility indices.
+                      <strong>All conversational interactions, memory summaries, reminders, and supportive suggestions provided by "Cliona" are generated by Artificial Intelligence algorithms.</strong> These outputs are for entertainment, companionship, and educational inspiration only. Cliona acts as a digital wingman; CLIONA. does not guarantee specific real-world outcomes, social feedback, or compatibility indices.
                     </p>
                   </div>
 
                   <div>
                     <h2 className="text-[#a3a3a3] font-extrabold uppercase text-xs tracking-wider font-mono mb-2">2. Liability Limitation</h2>
                     <p className="pl-4 border-l border-neutral-800">
-                      CLIONA. is not liable for any subjective dissatisfaction, physical discomfort from clothing purchased elsewhere, or mismatched retail coordinates. All purchase links, aesthetic inspiration, and suggestions are adopted purely at the user's discretion.
+                      CLIONA. is not liable for any subjective dissatisfaction, decisions made elsewhere, or actions taken based on generated conversation. All inspiration and suggestions are adopted purely at the user's discretion.
                     </p>
                   </div>
 

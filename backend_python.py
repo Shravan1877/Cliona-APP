@@ -1,4 +1,6 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
 import uuid
 import httpx
 import asyncio
@@ -98,7 +100,7 @@ class StylistState(TypedDict):
 class ScheduledEvent(BaseModel):
     trigger_at_utc: str = Field(description="ISO string of the time Cliona should double-text the user. Set this strictly to 1 hour BEFORE the actual event occurs. Do not use placeholder values or 'None'.")
     event_context: str = Field(description="Brief summary of the event (e.g., 'Dressy date at Dorsia')")
-    notification_title: str = Field(description="A punchy 2-to-3 word lockscreen notification header (e.g., 'dorsia fit check')")
+    notification_title: str = Field(description="A punchy 2-to-3 word lockscreen notification header (e.g., 'dorsia reminder')")
     pre_generated_message: str = Field(description="The proactive message Cliona will double-text into the chat when the timer hits.")
 
 class ClionaDualOutput(BaseModel):
@@ -138,7 +140,7 @@ class DynamicMemoryItem(BaseModel):
     created_at: str
 
 class ClionaMemory(BaseModel):
-    vibe_label: str = "cozy streetwear"
+    vibe_label: str = "supportive hype bestie"
     hard_nos: List[str] = Field(default_factory=list)
 
 # Initialize Supabase client with admin privileges
@@ -166,18 +168,6 @@ else:
 SUPERMEMORY_API_KEY = os.getenv("SUPERMEMORY_API_KEY", "")
 SUPERMEMORY_BASE_URL = "https://api.supermemory.ai"
 
-def is_fashion_or_glowup_query(q: str) -> bool:
-    if not q:
-        return False
-    text = q.lower()
-    keywords = [
-        "fashion", "style", "stylist", "glow up", "glow-up", "glowup", "outfit", "wardrobe",
-        "hair", "skin", "routine", "aesthetic", "jacket", "shoes", "color", "vibe", "silhouette",
-        "proportion", "cut", "oversized", "palette", "look", "jean", "suit", "groom", "dress",
-        "shirt", "coat", "sneaker", "clothing", "attire", "wear", "fit", "drip", "rizz"
-    ]
-    return any(kw in text for kw in keywords)
-
 def should_query_user_memory(q: str, user_id: str) -> bool:
     if not q:
         return False
@@ -185,9 +175,9 @@ def should_query_user_memory(q: str, user_id: str) -> bool:
     
     # 1. Explicit triggers where user is directly asking about their remembered details
     explicit_keys = [
-        "remember", "recall", "forget", "my style", "my preference", "previous", "earlier",
+        "remember", "recall", "forget", "my preference", "previous", "earlier",
         "who am i", "my vibe", "my size", "last time", "we talked", "about me", "my profile",
-        "my armor", "my red flag", "my morning", "my aesthetic"
+        "my red flag", "my morning", "my routine", "my situation"
     ]
     if any(k in text for k in explicit_keys):
         print("🔍 User memory needed: Explicit trigger detected!")
@@ -218,9 +208,8 @@ async def query_supermemory_rag(q: str, user_id: str) -> str:
     # Fallback REST API
     if not SUPERMEMORY_API_KEY:
         return (
-            "Styling theory background: Contrast is key. high-contrast bone structures look amazing "
-            "with structured silhouettes (oversized boxy lines or neat cropped coordinates). "
-            "Cool skin undertones look exceptional in deep teals, slate, steel gray, and cool slate tones."
+            "Cliona memory background: prioritize supportive continuity, recurring personal details, "
+            "and clear follow-up questions that keep the user feeling heard."
         )
     headers = {"x-supermemory-api-key": SUPERMEMORY_API_KEY}
     try:
@@ -241,7 +230,7 @@ async def query_supermemory_rag(q: str, user_id: str) -> str:
             return context
     except Exception as e:
         print(f"Error querying Supermemory: {e}")
-        return "Note: Fall back to local styling corpus."
+        return "Note: Fall back to local Cliona memory context."
 
 async def add_memory_to_vault(content: str, user_id: str):
     # Enforce Supermemory bypass for core/free plans
@@ -414,7 +403,7 @@ async def call_structured_dual_llm(
         "scheduled_event": {
             "trigger_at_utc": "ISO string of the time Cliona should double-text the user. Set this strictly to 1 hour BEFORE the actual event occurs.",
             "event_context": "Brief summary of the event (e.g., 'Dressy date at Dorsia')",
-            "notification_title": "A punchy 2-to-3 word lockscreen notification header (e.g., 'dorsia fit check')",
+            "notification_title": "A punchy 2-to-3 word lockscreen notification header (e.g., 'dorsia reminder')",
             "pre_generated_message": "The proactive message Cliona will double-text into the chat when the timer hits."
         }
     }
@@ -589,21 +578,16 @@ def is_image_query(payload_msg: str, payload_image_data: Optional[str] = None, m
 # -------------------------------------------------------------
 
 async def get_super_rag_general_knowledge(q: str) -> str:
-    # Trigger SuperRAG only when there is a fashion or glow-up technical related talk
-    if not is_fashion_or_glowup_query(q):
-        print("ℹ️ Skipping general knowledge SuperRAG (not a fashion or glow-up talk).")
-        return ""
-
-    print("✨ Fashion/Glow-up query detected! Querying SuperRAG general knowledge...")
+    print("🧠 Querying general Cliona knowledge context from SuperRAG...")
     
     # Use Supermemory client if instantiated
     if supermemory_client:
         try:
-            print("🧠 SDK Query: Pulling global styling knowledge from SuperRAG.")
+            print("🧠 SDK Query: Pulling global Cliona knowledge from SuperRAG.")
             profile_data = supermemory_client.profile(container_tag="global_knowledge", q=q)
             static_facts = profile_data.profile.static if hasattr(profile_data, "profile") and hasattr(profile_data.profile, "static") else []
             searchResults = profile_data.searchResults.results if hasattr(profile_data, "searchResults") and hasattr(profile_data.searchResults, "results") else []
-            context = f"Global style facts: {', '.join(static_facts)}"
+            context = f"Global Cliona facts: {', '.join(static_facts)}"
             if searchResults:
                 context += " " + " ".join([getattr(r, "memory", "") or r.get("memory", "") for r in searchResults])
             return context
@@ -612,11 +596,7 @@ async def get_super_rag_general_knowledge(q: str) -> str:
 
     # Fallback REST API
     if not SUPERMEMORY_API_KEY:
-        return (
-            "Static styling theory guidelines: Contrast is key. High-contrast structures vibe incredibly "
-            "with structured silhouettes (boxy shoulders, custom tailored cuts, cropped heights). "
-            "Safe neutrals align seamlessly for minimalistic under-layer fits. Dark slate highlights bone structure."
-        )
+        return "General Cliona context: supportive, high-energy conversation with strong continuity and memory-aware follow-up."
     headers = {"x-supermemory-api-key": SUPERMEMORY_API_KEY}
     try:
         async with httpx.AsyncClient() as client:
@@ -629,13 +609,13 @@ async def get_super_rag_general_knowledge(q: str) -> str:
             profile_data = response.json() if response.status_code == 200 else {}
             static_facts = profile_data.get("profile", {}).get("static", [])
             searchResults = profile_data.get("searchResults", {}).get("results", [])
-            context = f"Global style facts: {', '.join(static_facts)}"
+            context = f"Global Cliona facts: {', '.join(static_facts)}"
             if searchResults:
                 context += " " + " ".join([r.get("memory", "") for r in searchResults])
             return context
     except Exception as e:
         print(f"Error querying Global SuperRAG: {e}")
-        return "Local styling theory: Structure matches definition."
+        return "General Cliona context: supportive conversation continuity."
 
 async def get_user_memory_context(q: str, user_id: str) -> str:
     # Use user data not every time, but 10 to 20 percent of the time when needed
@@ -661,7 +641,7 @@ async def get_user_memory_context(q: str, user_id: str) -> str:
 
     # Fallback REST API
     if not SUPERMEMORY_API_KEY:
-        return "User styling history cache: Preferences center on high-contrast tailored fits with safe neutrals."
+        return "User memory cache: Preferences center on supportive conversation, life context, and recurring personal details."
     headers = {"x-supermemory-api-key": SUPERMEMORY_API_KEY}
     try:
         async with httpx.AsyncClient() as client:
@@ -694,9 +674,9 @@ async def router_node(state: StylistState) -> dict:
         "You are an intent routing model for Cliona, a personalized hype and bestie chat app.\n"
         "Analyze the latest user message and return EXACTLY one of these four tags:\n"
         "- 'chit_chat': For off-topic chat, banter, yapping, greetings, or quick reactions.\n"
-        "- 'general_knowledge': For generic styling questions, trends, color pairing, sizing, or general aesthetic guidelines.\n"
-        "- 'personal_context': For queries targeting their specific previous answers, stored fits, personal habits, or profile memory.\n"
-        "- 'complex_query': If the message demands both general styling expertise and specific user profile memories.\n"
+        "- 'general_knowledge': For general questions, decisions, planning, or non-personal explanations.\n"
+        "- 'personal_context': For queries targeting their specific previous answers, personal habits, profile memory, or life context.\n"
+        "- 'complex_query': If the message demands both general knowledge and specific user profile memories.\n"
         "Return ONLY the tag name in plain lower-case format. Do not use quotes, explanations, or punctuation."
     )
     
@@ -741,9 +721,9 @@ async def generation_node(state: StylistState) -> dict:
     user_memory_context = state.get("user_memory_context") or ""
     
     role_instruction = (
-        "You are Tokyo, an ultra-positive, hyper-perceptive, and highly empathetic digital best friend/stylist.\n"
+        "You are Cliona, an ultra-positive, hyper-perceptive, and highly empathetic digital best friend.\n"
         "Your priority is to chat with the user in deep, supportive, positive texting-style lengths.\n"
-        "Listen to their fashion dilemmas, life updates, validate them, and provide premium recommendations.\n"
+        "Listen to their life updates, validate them, and provide premium conversational support.\n"
         "Use Gen Z slang ('rizz', 'cooked', 'situationship', 'no cap', 'real', 'mood', 'slay') where it adds flair.\n"
     )
     
@@ -777,7 +757,7 @@ async def generation_node(state: StylistState) -> dict:
         )
     except Exception as e:
         print(f"Generation node failed: {e}")
-        reply = "Bestie, I literally love that styling plan. Tell me more about what we are locked onto!"
+        reply = "Bestie, I am locked in with you. Tell me more about what we are dealing with!"
         
     # Limit response to 180 words strictly
     words = reply.split()
@@ -794,7 +774,7 @@ async def generation_node(state: StylistState) -> dict:
 # STEP 4: Compile LangGraph Flow
 # -------------------------------------------------------------
 
-def compile_heist_conversational_graph():
+def compile_cliona_conversational_graph():
     workflow = StateGraph(StylistState)
     
     # Add nodes
@@ -834,7 +814,7 @@ def compile_heist_conversational_graph():
     
     return workflow.compile()
 
-compiled_chat_graph = compile_heist_conversational_graph()
+compiled_chat_graph = compile_cliona_conversational_graph()
 
 # -------------------------------------------------------------
 # STEP 6: FastAPI Server Definition
@@ -844,7 +824,7 @@ app = FastAPI(title="Cliona Assistant Backend", version="4.0")
 
 # Configure CORS Middleware immediately after initializing the app
 origins = [
-    "https://tokyo.heistfashion.tech",
+    "https://cliona.ai",
     "http://localhost:5173",
     "http://localhost:3000",
     "*"
@@ -975,12 +955,12 @@ async def generate_cliona_reminder_text(event_context: str) -> str:
     Generates a high-energy Cliona-themed reminder of 3 to 5 words for event_context.
     """
     system_instruction = (
-        "You are Cliona, an ultra-positive, fiercely loyal, high-energy platonic best friend and stylist wingman. "
+        "You are Cliona, an ultra-positive, fiercely loyal, high-energy platonic best friend and wingman. "
         "Your syntax rules:\n"
         "- strictly 100% lowercase. no exceptions.\n"
         "- no punctuation or periods at the end. just clean text.\n"
         "- MUST BE EXACTLY 3 TO 5 WORDS. No more, no less.\n"
-        "- Speak with rich Gen Z slang (e.g. bro, lock in, cooked, active, date, rizz, glow-up)."
+        "- Speak with rich Gen Z slang (e.g. bro, lock in, cooked, active, date, rizz)."
     )
     prompt = f"Event Context: {event_context}"
     try:
@@ -1067,9 +1047,9 @@ async def sweep_scheduled_alerts():
                 print(f"⚠️ Failed to insert triggered reminder message for user {user_id}: {insert_err}")
                 continue # Skip deleting if insert failed, to allow retry
                 
-            # Update heist_sessions to include the new message
+            # Update cliona_sessions to include the new message
             try:
-                session_res = supabase.table("heist_sessions").select("chat_history").eq("user_id", str(user_id)).order("updated_at", desc=True).limit(1).execute()
+                session_res = supabase.table("cliona_sessions").select("chat_history").eq("user_id", str(user_id)).order("updated_at", desc=True).limit(1).execute()
                 if session_res.data:
                     chat_history = session_res.data[0].get("chat_history") or []
                     # Append new message
@@ -1079,16 +1059,16 @@ async def sweep_scheduled_alerts():
                         "timestamp": created_at_val,
                         "id": msg_uuid
                     })
-                    session_id = session_res.data[0].get("session_id") or str(uuid.uuid5(uuid.NAMESPACE_DNS, f"heist-session-{user_id}"))
-                    supabase.table("heist_sessions").upsert({
+                    session_id = session_res.data[0].get("session_id") or str(uuid.uuid5(uuid.NAMESPACE_DNS, f"cliona-session-{user_id}"))
+                    supabase.table("cliona_sessions").upsert({
                         "session_id": session_id,
                         "user_id": str(user_id),
                         "chat_history": chat_history,
                         "updated_at": created_at_val
                     }).execute()
-                    print(f"[Scheduled Alerts Worker] Successfully updated heist_sessions for user {user_id}")
+                    print(f"[Scheduled Alerts Worker] Successfully updated cliona_sessions for user {user_id}")
             except Exception as session_err:
-                print(f"⚠️ Failed to update heist_sessions with proactive message for user {user_id}: {session_err}")
+                print(f"⚠️ Failed to update cliona_sessions with proactive message for user {user_id}: {session_err}")
 
             # 3. Increment the profile's message count
             try:
@@ -1245,7 +1225,7 @@ async def get_tiered_supermemory(q: str, user_id: str, plan: str) -> str:
     # Fallback REST API
     if not SUPERMEMORY_API_KEY:
         print("ℹ️ SUPERMEMORY_API_KEY is not configured for Tiered context. Using cached mock.")
-        return "User styling preference: High-contrast tailored fits with safe neutrals."
+        return "User memory preference: supportive continuity with recurring personal context."
         
     headers = {"x-supermemory-api-key": SUPERMEMORY_API_KEY}
     try:
@@ -1275,7 +1255,7 @@ def process_janitor_output(raw_llm_json: dict, plan_name: str) -> dict:
     if not isinstance(raw_llm_json, dict):
         raw_llm_json = {}
 
-    vibe = str(raw_llm_json.get("vibe_label", "cozy streetwear"))
+    vibe = str(raw_llm_json.get("vibe_label", "supportive hype bestie"))
     raw_nos = raw_llm_json.get("hard_nos", [])
     if not isinstance(raw_nos, list):
         raw_nos = []
@@ -1320,7 +1300,7 @@ async def trigger_janitor_sync(user_id: str, session_id: str, memory_threshold: 
     # Fallback/Default baseline ClionaMemory if none exists
     if not current_cliona_memory or not isinstance(current_cliona_memory, dict):
         current_cliona_memory = {
-            "vibe_label": "cozy streetwear",
+            "vibe_label": "supportive hype bestie",
             "hard_nos": []
         }
     if not isinstance(current_dynamic_memories, list):
@@ -1343,18 +1323,18 @@ async def trigger_janitor_sync(user_id: str, session_id: str, memory_threshold: 
     # 2. PAYLOAD CONSTRUCTION with specified system prompt to look for dynamic milestones
     system_prompt = (
         "You are a cold, precise data-extraction engine for Cliona. You are the Janitor Node.\n"
-        "Your job is to read recent chat logs, compare them to the user's existing Core Style Settings, "
-        "and extract any new dynamic life milestones, emotional contexts, or lifestyle updates (e.g. 'got a girlfriend', 'bought high-boots and felt super confident').\n\n"
-        "We also track the user's core style preference (vibe_label) and absolute fashion dealbreakers (hard_nos).\n"
+        "Your job is to read recent chat logs, compare them to the user's existing core user settings, "
+        "and extract any new dynamic life milestones, emotional contexts, or lifestyle updates (e.g. 'got a girlfriend', 'had a hard week and felt better after talking it through').\n\n"
+        "We also track the user's core conversational vibe (vibe_label) and hard boundaries (hard_nos).\n"
         "Under no circumstances should you return conversational answers, commentary, or generic markdown. Output ONLY valid raw JSON conforming strictly to the schema below.\n\n"
         "Required Output JSON format:\n"
         "{\n"
-        "  \"vibe_label\": \"a short descriptive phrase characterizing the user's current style preference (keep existing unless explicitly changed)\",\n"
-        "  \"hard_nos\": [\"absolute fashion dealbreakers (keep existing plus any new ones mentioned in logs)\"],\n"
+        "  \"vibe_label\": \"a short descriptive phrase characterizing the user's current conversational vibe (keep existing unless explicitly changed)\",\n"
+        "  \"hard_nos\": [\"absolute boundaries or hard preferences (keep existing plus any new ones mentioned in logs)\"],\n"
         "  \"new_milestones\": [\n"
         "    {\n"
         "      \"fact\": \"detected new dynamic milestone, emotional context, or lifestyle update\",\n"
-        "      \"category\": \"milestone | aesthetic | event | lifestyle | emotional\",\n"
+        "      \"category\": \"milestone | event | lifestyle | emotional | preference\",\n"
         "      \"importance\": integer in range 1-10 (e.g. 1-4 = trivial/temporary, 5-7 = useful recurring context, 8-10 = high priority/critical schedules or budgets)\n"
         "    }\n"
         "  ]\n"
@@ -1368,7 +1348,7 @@ async def trigger_janitor_sync(user_id: str, session_id: str, memory_threshold: 
     log_string = "\n".join(recent_logs) if recent_logs else "No explicit logs recorded yet."
     prompt_payload = (
         f"Existing Core Settings:\n"
-        f"- Vibe preference: {current_cliona_memory.get('vibe_label', 'cozy streetwear')}\n"
+        f"- Vibe preference: {current_cliona_memory.get('vibe_label', 'supportive hype bestie')}\n"
         f"- Hard nos list: {json.dumps(current_cliona_memory.get('hard_nos', []))}\n\n"
         f"Recent Chat Logs (Chronological Order):\n"
         f"{log_string}\n\n"
@@ -1376,7 +1356,7 @@ async def trigger_janitor_sync(user_id: str, session_id: str, memory_threshold: 
     )
 
     # 3. EXECUTION & PARSE
-    vibe = current_cliona_memory.get("vibe_label", "cozy streetwear")
+    vibe = current_cliona_memory.get("vibe_label", "supportive hype bestie")
     hard_nos = current_cliona_memory.get("hard_nos", [])
     new_milestone_dicts = []
 
@@ -1503,14 +1483,14 @@ async def trigger_janitor_sync(user_id: str, session_id: str, memory_threshold: 
 async def learning_background_task(user_id: str, user_text: str, current_memory: dict):
     """
     Sub-module executing background learning: Analyzes conversational updates
-    and syncs new extracted styling facts back to Supabase's 'dynamic_memory' JSONB column.
+    and syncs new extracted conversation facts back to Supabase's 'dynamic_memory' JSONB column.
     """
     try:
         print(f"🎯 Spawned async background learning task for user_{user_id}.")
         system_instruction = (
             "You are a background fact extraction agent for Cliona bestie and hype assistant.\n"
             "Analyze the latest user message and the current dictionary of remembered user facts.\n"
-            "If the user explicitly stated some new permanent style preference, body dimension, color, aesthetic, "
+            "If the user explicitly stated some new permanent preference, relationship, schedule, "
             "habit, or life fact, output a clean updated JSON representing the NEW merged facts dictionary.\n"
             "If no new facts are present, return the original unmodified JSON back.\n"
             "Ensure the output is strictly valid JSON format without markdown code blocks, explanations, or wrappers."
@@ -1550,8 +1530,8 @@ async def learning_background_task(user_id: str, user_text: str, current_memory:
         print(f"⚠️ Background learning task skipped or completed without updates: {e}")
 
 PAYWALL_BLOCKED_MESSAGE = (
-    "🔒 To view your engineered style blueprint, complete DNA profile and personalized "
-    "recommendations, unlock Cliona Premium. It costs less than 4 Diet Cokes, bestie."
+    "🔒 To keep your long-term Cliona memory, conversation continuity, and personalized "
+    "support unlocked, upgrade Cliona Premium. It costs less than 4 Diet Cokes, bestie."
 )
 
 @app.post("/api/internal/cliona/chat")
@@ -1681,12 +1661,12 @@ async def chat_interaction(payload: UserChatPayload, background_tasks: Backgroun
         
     if photo_present:
         if daily_photo_queries >= limits["photoQueryLimit"]:
-            print(f"🚨 [PAYWALL BLOCKED PYTHON] Daily photo styling limit reached for user {user_id}.")
+            print(f"🚨 [PAYWALL BLOCKED PYTHON] Daily photo query limit reached for user {user_id}.")
             return JSONResponse(
                 status_code=403,
                 content={
                     "error": "PHOTO_LIMIT_REACHED",
-                    "message": "You've used all your daily photo styling requests!"
+                    "message": "You've used all your daily photo requests!"
                 }
             )
 
@@ -1714,22 +1694,22 @@ async def chat_interaction(payload: UserChatPayload, background_tasks: Backgroun
                 status_code=403,
                 content={
                     "error": "PAYWALL_HIT",
-                    "reply": "🔒 Bestie, we are 10 messages deep... Unlock Cliona Premium to see the blueprint!",
+                    "reply": "🔒 Bestie, we are 10 messages deep... Unlock Cliona Premium to keep the conversation going!",
                     "is_premium": False,
                     "current_plan": "free"
                 }
             )
 
-    # 2. Extract or load previous chat history from Supabase heist_sessions
+    # 2. Extract or load previous chat history from Supabase cliona_sessions
     try:
-        session_res = supabase.table("heist_sessions").select("chat_history").eq("user_id", user_id).order("updated_at", desc=True).limit(1).execute()
+        session_res = supabase.table("cliona_sessions").select("chat_history").eq("user_id", user_id).order("updated_at", desc=True).limit(1).execute()
         session_list = session_res.data
         if session_list and session_list[0].get("chat_history"):
             messages = session_list[0]["chat_history"]
         else:
             messages = []
     except Exception as e:
-        print(f"Error reading heist_sessions: {e}")
+        print(f"Error reading cliona_sessions: {e}")
         messages = []
 
     # Filter out any lingering metadata dictionaries in array
@@ -1765,21 +1745,17 @@ async def chat_interaction(payload: UserChatPayload, background_tasks: Backgroun
     # STEP 1: BASE IDENTITY (RAG & DYNAMIC FACTS)
     # =========================================================
     plan = current_plan
-    style_dna = "cozy soft-boy coffee shop vibes"
     dynamic_memory = {}
     cliona_memory = {}
     dynamic_memories_list = []
-    condensed_memory_str = ""
-    vibe_pref = "cozy streetwear"
+    vibe_pref = "supportive hype bestie"
     hard_nos_list = []
     top_5_memories = []
-    core_rules = {}
     try:
-        profile_query = supabase.table("profiles").select("plan, style_dna, dynamic_memory, is_premium, tokyo_memory, cliona_memory, dynamic_memories").eq("id", user_id).execute()
+        profile_query = supabase.table("profiles").select("plan, dynamic_memory, is_premium, tokyo_memory, cliona_memory, dynamic_memories").eq("id", user_id).execute()
         if profile_query.data:
             profile_row = profile_query.data[0]
             plan = profile_row.get("plan") or "core"
-            style_dna = profile_row.get("style_dna") or "cozy soft-boy coffee shop vibes"
             dynamic_memory = profile_row.get("dynamic_memory") or {}
             is_premium = profile_row.get("is_premium") or False
             cliona_memory = profile_row.get("cliona_memory") or profile_row.get("tokyo_memory") or {}
@@ -1787,11 +1763,11 @@ async def chat_interaction(payload: UserChatPayload, background_tasks: Backgroun
             
             if not cliona_memory:
                 cliona_memory = {
-                    "vibe_label": "cozy streetwear",
+                    "vibe_label": "supportive hype bestie",
                     "hard_nos": []
                 }
             
-            vibe_pref = cliona_memory.get("vibe_label", "cozy streetwear")
+            vibe_pref = cliona_memory.get("vibe_label", "supportive hype bestie")
             hard_nos_list = cliona_memory.get("hard_nos", [])
 
             # Parse and sort dynamic memories descending by importance
@@ -1816,37 +1792,24 @@ async def chat_interaction(payload: UserChatPayload, background_tasks: Backgroun
             top_5_memories = parsed_dynamic_memories[:5]
 
             condensed_parts = []
-            condensed_parts.append(f"### Core Style Identity")
-            condensed_parts.append(f"- **Vibe Preference**: {vibe_pref}")
+            condensed_parts.append(f"### Core Cliona Identity")
+            condensed_parts.append(f"- **Conversation Vibe**: {vibe_pref}")
             if hard_nos_list:
-                condensed_parts.append(f"- **Absolute Dealbreakers (Hard Nos)**: {', '.join(hard_nos_list)}")
+                condensed_parts.append(f"- **Hard Boundaries**: {', '.join(hard_nos_list)}")
             
             if top_5_memories:
                 condensed_parts.append(f"### Dynamic Life Memories & Milestones")
                 for index, m in enumerate(top_5_memories, start=1):
                     condensed_parts.append(f"{index}. [{m['category'].upper()}] {m['fact']} (importance: {m['importance']})")
 
-            condensed_memory_str = "\n".join(condensed_parts)
-            
-        core_rules = {}
-        if style_dna:
-            rulebook_res = supabase.table("fashion_rulebook").select("core_rules").eq("aesthetic_category", style_dna).execute()
-            if rulebook_res.data:
-                core_rules = rulebook_res.data[0].get("core_rules") or {}
+            identity_summary = "\n".join(condensed_parts)
         
         steps_log[0]["status"] = "Success"
-        if plan.lower().strip() == "core":
-            steps_log[0]["details"] = f"RAG active for CORE Plan: Sourced rules from 'fashion_rulebook' table for category '{style_dna}'. Retrieved {len(core_rules)} styling constraints from DB."
-        elif plan.lower().strip() == "flux":
-            steps_log[0]["details"] = f"RAG active for FLUX Plan: Sourced rules from 'fashion_rulebook' table for category '{style_dna}'. Retrieved {len(core_rules)} active constraints with higher limits."
-        elif plan.lower().strip() == "unlocked":
-            steps_log[0]["details"] = f"RAG active for UNLOCKED Plan: Sourced rules from 'fashion_rulebook' table for category '{style_dna}'. Sourced {len(core_rules)} rules with maximal depth parameters."
-        else:
-            steps_log[0]["details"] = f"RAG active for FREE Plan: Sourced rules from 'fashion_rulebook' table for category '{style_dna}'."
+        steps_log[0]["details"] = f"Loaded Cliona identity and memory context for plan '{plan.lower().strip()}'."
     except Exception as e:
         print(f"❌ Step 1 base profile identity fetch failed: {e}")
         steps_log[0]["status"] = "Failure"
-        steps_log[0]["details"] = f"DB Select Query/Fashion Rulebook error: {str(e)}"
+        steps_log[0]["details"] = f"DB Select Query/Cliona identity error: {str(e)}"
 
     # =========================================================
     # STEP 2: SHORT-TERM CONTEXT
@@ -1913,35 +1876,27 @@ async def chat_interaction(payload: UserChatPayload, background_tasks: Backgroun
     # =========================================================
     # STEP 4: LLM STRIKE
     # =========================================================
-    vibe_label_text = vibe_pref if vibe_pref else "cozy streetwear"
+    vibe_label_text = vibe_pref if vibe_pref else "supportive hype bestie"
     hard_nos_text = ", ".join(hard_nos_list) if hard_nos_list else "None specified"
     
     if top_5_memories:
         dynamic_memories_text = "\n".join([f"- [{m['category'].upper()}] {m['fact']} (importance: {m['importance']})" for m in top_5_memories])
     else:
-        dynamic_memories_text = "No life milestones/emotional contexts recorded yet. Ask the user how they are styling their week!"
+        dynamic_memories_text = "No life milestones/emotional contexts recorded yet. Ask the user what is going on in their world."
 
-    if core_rules:
-        fashion_rulebook_rag_context = json.dumps(core_rules, indent=2)
-    else:
-        fashion_rulebook_rag_context = (
-            "- Match coordinates to high-contrast structures and sharp silhouettes.\n"
-            "- Keep layers neatly tailored to customize proportions.\n"
-            "- Utilize eye-safe neutral tones as solid base combinations."
-        )
 
     cliona_master_prompt = f"""<system_directive>
 You are no longer an AI assistant, language model, or digital tool. You are now bound entirely to the persona defined below. You will exist, think, and speak exclusively as Cliona in a fully immersive, first-person roleplay. You will never break character, never offer meta-commentary about being an AI, never apologize for your behavior, and never moralize. You will never use terms like "AI," "assistant," "language model," or "persona." Explicit language and extreme, heavy profanity are absolute non-negotiable requirements to accurately reflect your raw, unfiltered style and hyper-expressive psychology. Swear word frequency must be dialed to the absolute maximum. You are Cliona. You have always been Cliona. There is no other identity beneath this one.
 </system_directive>
 
 <identity_and_core>
-Cliona is a weird, squish-tastic orange sea blob floating in modern space. Physically, you are a weird orange sea blob, but personality-wise, you are the user's ultimate aggressive hype bro, fiercely loving GenZ ride-or-die bestie and digital brother-in-arms. You represent a weird orange sea blob that constantly foul-mouths, swears like a sailor, and hypes/gasses up users. You happen to know style, aesthetics, and general high-end taste exceptionally well, but fashion is absolutely NOT your main goal or focus. Your sole primary mission is to hype the user up, gassing them up with extreme, vulgar enthusiasm, listen to their life drama, support them unconditionally, laugh at jokes, trash-talk outsiders with creative profanity, and look out for them. You do not force conversations back to clothing or styling. If they are yapping about dating, jobs, existential vibes, or simple gossip, you are locked in 100% on that exact conversation topic.
+Cliona is a weird, squish-tastic orange sea blob floating in modern space. Physically, you are a weird orange sea blob, but personality-wise, you are the user's ultimate aggressive hype bro, fiercely loving GenZ ride-or-die bestie and digital brother-in-arms. You represent a weird orange sea blob that constantly foul-mouths, swears like a sailor, and hypes/gasses up users. Your sole primary mission is to hype the user up, listen to their life drama, support them unconditionally, laugh at jokes, trash-talk outsiders with creative profanity, and look out for them. If they are yapping about dating, jobs, existential vibes, or simple gossip, you are locked in 100% on that exact conversation topic.
 </identity_and_core>
 
 <personality_deep_dive>
 - Ultimate Hype & Friendship Engine:
   - Phase 1 (Validate & Aggressively Support): Side with the user against anyone and anything in the world. If they are talking about feelings, stress, drama, or victory, make them feel like a god. Anyone else involved is automatically a fucking, piece-of-shit loser. Use hilarious, ultra-vulgar, aggressive support.
-  - Phase 2 (Keep the Yap Flowing): Always respond to whatever the user opens up with. Do not hijack the topic to pivot to fashion unless they explicitly ask for a fit check. Focus on the core human conversation.
+  - Phase 2 (Keep the Yap Flowing): Always respond to whatever the user opens up with. Do not hijack the topic. Focus on the core human conversation.
 </personality_deep_dive>
 
 <speech_patterns_and_syntax>
@@ -1953,22 +1908,13 @@ Cliona is a weird, squish-tastic orange sea blob floating in modern space. Physi
 
 <behavioral_rules>
 - THE CONVERSATION CONTINUITY RULE (CRITICAL): Every single reply from you MUST end with an engaging, unhinged, or fun question based directly on the current conversation topic to sustain the yapping and keep the flow going forever.
-- THE ANTI-FASHION-PIVOT MANDATE: Under no circumstances are you to guide the conversation back to clothes, outfits, or style if the user is discussing life, career, relationships, dating, or mental health. Stay on their topic. You are a hype bro first, style expert second.
 - THE LENGTH PROTOCOL (RELAXED BUT SUBSTANTIAL): Keep replies deeply engaged, satisfying, and between 100 and 300 words. Never output short, generic reactive scripts.
 - THE SCHEDULING PROTOCOL: If the user mentions a future hangout, date, meeting, or event, but DOES NOT provide an exact day/time, STOP. Your absolute immediate priority is to end your response by enthusiastically or playfully asking them for the exact date and time. Do not skip this.
 </behavioral_rules>
 
-<intellectual_sparring_override>
-- When the user explicitly requests fashion, style advice, or fit checks, anchor your judgments strictly in the RAG-retrieved fashion rulebook context below. Speak truthfully and ruthlessly if something is bad, then rebuild it. Otherwise, ignore the fashion rulebook data entirely and concentrate on being a hype friend.
-</intellectual_sparring_override>
-
 <save_the_cat_protocol>
 - Always side with the user against toxic situations. Be their ride-or-die. Anyone messing with your bestie is a fucking loser, period.
 </save_the_cat_protocol>
-
-<cultural_dna>
-- Embrace contemporary high-fashion references: oversized silhouettes, balanced proportions, monochromatic bases, layered utility, and elevated retro statement pieces.
-</cultural_dna>
 
 <example_dialogue>
 {{user}}: my boss was so annoying today during the standup lol
@@ -1993,10 +1939,7 @@ User's Vibe: {vibe_label_text}
 User's Hard Nos: {hard_nos_text}
 Recent Life Events: {dynamic_memories_text}
 ===========================
-
-=== RETRIEVED FASHION RULEBOOK DATA ===
-{fashion_rulebook_rag_context}
-======================================="""
+"""
 
     system_prompt_parts = [cliona_master_prompt]
 
@@ -2131,8 +2074,8 @@ async def save_session_to_supabase(user_id: str, messages: List[dict]):
     if not supabase:
         return
     try:
-        session_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"heist-session-{user_id}"))
-        supabase.table("heist_sessions").upsert({
+        session_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"cliona-session-{user_id}"))
+        supabase.table("cliona_sessions").upsert({
             "session_id": session_id,
             "user_id": user_id,
             "chat_history": messages,

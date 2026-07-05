@@ -41,7 +41,6 @@ export interface ProfileRow {
   id: string;
   full_name: string | null;
   avatar_url: string | null;
-  style_dna: string | null;
   updated_at: string | null;
   scan_credits: number;
   batch_credits: number;

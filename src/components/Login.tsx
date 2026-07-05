@@ -224,7 +224,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                     type="button"
                     onClick={() => {
                       window.history.pushState({}, "", "/forgot-password");
-                      window.dispatchEvent(new Event("heist-navigate"));
+                      window.dispatchEvent(new Event("cliona-navigate"));
                     }}
                     className="text-[10px] text-[var(--primary-accent)] hover:text-[var(--text-primary)] font-black uppercase tracking-wider hover:underline cursor-pointer"
                   >
@@ -305,7 +305,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
               type="button"
               onClick={() => {
                 window.history.pushState({}, "", "/legal");
-                window.dispatchEvent(new Event("heist-navigate"));
+                window.dispatchEvent(new Event("cliona-navigate"));
               }}
               className="hover:text-[var(--primary-accent)] transition cursor-pointer font-bold underline"
             >
