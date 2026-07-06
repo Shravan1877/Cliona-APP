@@ -48,3 +48,33 @@ export interface ProfileRow {
   is_premium: boolean;
   message_count: number;
 }
+
+/**
+ * RFC4122 compliant UUID structure helper
+ */
+export function generateUUID(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+/**
+ * Pseudo-UUID deterministic translations to map custom sandbox identifiers safely to standard UUID formatting
+ */
+export function getSafeUUID(rawId: string): string {
+  const clean = rawId.trim();
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(clean)) {
+    return clean;
+  }
+  let hash = 0;
+  for (let i = 0; i < clean.length; i++) {
+    hash = clean.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hex = Math.abs(hash).toString(16).padStart(12, "0");
+  return `00000000-0000-4000-8000-${hex.substring(0, 12)}`;
+}
